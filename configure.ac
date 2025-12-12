@@ -20,8 +20,17 @@
 #
 
 AC_INIT([dmalloc], [5.6.5], [https://dmalloc.com/])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_SRCDIR(dmalloc.c)
 AC_CONFIG_HEADERS([conf.h])
+
+# Add settings.h include at the end of conf.h
+AH_BOTTOM([
+#ifndef __CONF_H__
+#define __CONF_H__
+#include "settings.h"
+#endif
+])
 
 # Enable canonical host detection for better platform support
 AC_CANONICAL_HOST
@@ -52,12 +61,6 @@ AC_ARG_ENABLE(threads,
     [ # enable_threads set by default ],
     [ enable_threads=no ]
 )
-AC_ARG_ENABLE(shlib,
-    [ AS_HELP_STRING([--enable-shlib],
-		[build shared libraries (disabled by default)] ) ],
-    [ # enable_shlib set by default ],
-    [ enable_shlib=no ]
-)
 
 ##############################################################################
 AC_MSG_NOTICE([build utilities])
@@ -79,116 +82,42 @@ if test "$ac_cv_prog_cc_stdc" = "no" ; then
 	AC_MSG_WARN()
 fi
 AC_PROG_INSTALL
-AC_PROG_RANLIB
+
+# Initialize automake
+AM_INIT_AUTOMAKE([foreign subdir-objects])
+AM_PROG_AR
+AM_SILENT_RULES([yes])
+
+# Ensure cl CXX also uses compile wrapper (like CC does via AM_PROG_CC_C_O)
+# This is necessary for MSVC which doesn't support -c and -o together
+if test "$am_cv_prog_cc_c_o" != yes; then
+  case $CXX in
+    *\\* | */*) ;;
+    *cl*) CXX="$am_aux_dir/compile $CXX" ;;
+  esac
+fi
+
+LT_INIT([win32-dll]) dnl benign for other platforms
+LT_LANG([C++])
+
+AS_CASE([$host_os], [msys*|cygwin*|mingw*|win*], [windows_platform=yes])
+AS_CASE([$enable_cxx,$enable_shared,$windows_platform],
+    [yes,yes,yes], [ MSG_WARN(m4_normalize([
+        You cannot use global new/delete operators from a shared library (DLL) on Windows.
+        Use static library for that instead.]))
+    ])
+
+# Set up automake conditionals for build options
+AM_CONDITIONAL([WINDOWS_PLATFORM], [test "$windows_platform" = "yes"])
+AM_CONDITIONAL([ENABLE_SHARED], [test "$enable_shared" = "yes"])
+AM_CONDITIONAL([ENABLE_STATIC], [test "$enable_static" = "yes"])
+AM_CONDITIONAL([ENABLE_CXX], [test "$enable_cxx" = "yes"])
+AM_CONDITIONAL([ENABLE_THREADS], [test "$enable_threads" = "yes"])
+AM_CONDITIONAL([BUILD_DOCS], [false])
 
 AC_CHECK_HEADERS([stdarg.h stdio.h stdlib.h string.h strings.h unistd.h sys/types.h sys/mman.h],
     [],
     [AC_MSG_WARN([some standard headers not found])])
-###############################################################################
-# shared library handling
-
-#
-# check to see where we should install our shared libraries
-# DONT CACHE in case the change the --prefix
-#
-# This is pretty tricky here and should be handled by autoconf
-# automatically.  I try to see if there is a shlib directory
-# to install by shlibs there.  If not I use the $libdir.  Some
-# of the variables have values of '${exec_prefix}' and the like
-# so the quoting is very important.
-#
-# We first try and find the true directory where we are
-# installing.
-#
-if test "x$exec_prefix" = "xNONE"; then
-	if test "x$prefix" = "xNONE"; then
-		shlibprefix="$ac_default_prefix"
-	else
-		shlibprefix="$prefix"
-	fi
-else
-	shlibprefix="$exec_prefix"
-fi
-#
-# Then we see if there is a special shlib directory to use.
-#
-if test -d "$shlibprefix/shlib"; then
-	shlibdir='${exec_prefix}/shlib'
-else
-	shlibdir="$libdir"
-fi
-AC_SUBST(shlibdir)
-
-# see how the local system builds shared libraries
-AC_MSG_CHECKING([shared library link args])
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([ int foo(int val) { return val + 1; } ])],[
-	# so now we try to create an archive from the compiled .o file
-	(ar cr conftest.a conftest.o) 2>&5
-	# see which shared-library ld commands work
-	#
-	# Darwin/Mac OS X - Terry Teague
-	# username terry_teague at domain users.sourceforge.net
-	ac_cv_shared_lib_link_objs=no
-	AS_CASE([$host_os],
-        [darwin*], [
-          if (ld -dylib -o conftest.so.t -lc conftest.a) 2>&5; then
-            # By convention on some platforms
-            # libLLL.so, libLLL.X.so are symlinks to libLLL.X.Y.Z.so
-            # where X.Y.Z is version # (major.minor.increment) of the library
-	    # (API)
-            # For the moment set the Mac OS X dylib compatibility version # to
-	    # 1.0 and don't create any symlinks or versioned library names.
-            # Perhaps this could be the version of the dmalloc library
-	    # (e.g. 5.4.0)
-            ac_cv_shared_link_args='$(CXX) -dynamiclib -install_name $@ -compatibility_version 1 -current_version 1 -o $@.t'
-            # linking static archives into a dynamic lib doesn't seem to work
-            # explicitly link the object files
-            ac_cv_shared_lib_link_objs=yes
-          else
-            # oh well, toss an error
-            ac_cv_shared_link_args='# Could not configure shlib linking'
-            enable_shlib=no
-          fi], [
-	if (ld -shared --whole-archive -soname conftest.so -o conftest.so.t conftest.a) 2>&5; then
-		ac_cv_shared_link_args='ld -shared --whole-archive -soname $@ -o $@.t'
-	elif (ld -shared -o conftest.so.t -all -soname conftest.so.t -none -lc -all conftest.a) 2>&5; then
-		ac_cv_shared_link_args='ld -shared -o $@.t -all -soname $@ -none -lc -all'
-	elif (ld -G -o conftest.so.t conftest.a) 2>&5; then
-		ac_cv_shared_link_args='ld -G -o $@.t'
-	else
-		# oh well, toss an error
-		ac_cv_shared_link_args='# Could not configure shlib linking'
-		enable_shlib=no
-	fi
-	])
-],[
-	# oh well, toss an error
-	ac_cv_shared_link_args='# Could not configure shlib linking'
-	enable_shlib=no
-])
-shlinkargs="$ac_cv_shared_link_args"
-AC_SUBST(shlinkargs)
-if test "$ac_cv_shared_lib_link_objs" = "yes"; then
-       AC_MSG_RESULT([$ac_cv_shared_link_args objectfiles...])
-else
-       AC_MSG_RESULT([$ac_cv_shared_link_args])
-fi
-
-###############################################################################
-
-AC_MSG_CHECKING([shared library extension])
-AS_CASE([$host_os],
-	[darwin*], [
-	# Darwin/Mac OS X - Terry Teague
-	# username terry_teague at domain users.sourceforge.net
-	ac_cv_shared_lib_suffix=dylib
-], [
-	ac_cv_shared_lib_suffix=so
-])
-shlibext="$ac_cv_shared_lib_suffix"
-AC_MSG_RESULT([$ac_cv_shared_lib_suffix])
-AC_SUBST(shlibext)
-
 ###############################################################################
 
 AC_MSG_CHECKING([C++ support])
@@ -211,18 +140,6 @@ else
 	AC_SUBST([TH_ON],[#])
 	AC_SUBST([TH_OFF],[])
 	AC_MSG_RESULT([disabled])
-fi
-
-# shlib support
-AC_MSG_CHECKING(shlib support)
-if test "$enable_shlib" = "yes"; then
-	AC_SUBST([SL_ON],[])
-	AC_SUBST([SL_OFF],[#])
-	AC_MSG_RESULT(enabled)
-else
-	AC_SUBST([SL_ON],[#])
-	AC_SUBST([SL_OFF],[])
-	AC_MSG_RESULT(disabled)
 fi
 
 ###############################################################################
@@ -690,6 +607,12 @@ int main() { return 1; }
   AC_MSG_RESULT([yes])
   destructor_works=yes ],
 )
+
+dnl ac_cv_have_decl__MSC_VER
+AC_CHECK_DECL([_MSC_VER], [
+    ac_cv_return_macros_work=yes
+])
+AM_CONDITIONAL([MSVC], [test "x$ac_cv_have_decl__MSC_VER" = "xyes"])
 
 ##############################################################################
 
