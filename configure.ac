@@ -19,9 +19,12 @@
 # The author may be contacted via https://dmalloc.com/
 #
 
-AC_INIT(dmalloc, 5.6.5, [https://dmalloc.com/])
+AC_INIT([dmalloc], [5.6.5], [https://dmalloc.com/])
 AC_CONFIG_SRCDIR(dmalloc.c)
-AC_CONFIG_HEADER(conf.h)
+AC_CONFIG_HEADERS([conf.h])
+
+# Enable canonical host detection for better platform support
+AC_CANONICAL_HOST
 
 dmalloc_version_major=`echo $PACKAGE_VERSION | sed -e '[s/\.[0-9][0-9]*\.[0-9][0-9]*$//]'`
 export dmalloc_version_major
@@ -38,19 +41,19 @@ AC_MSG_NOTICE([configurations for the dmalloc library version $dmalloc_version])
 # arguments
 
 AC_ARG_ENABLE(cxx,
-    [ AC_HELP_STRING([--disable-cxx],
+    [ AS_HELP_STRING([--disable-cxx],
 		[do not build in C++ support (enabled by default)] ) ],
     [ # enable_cxx set by default ],
     [ enable_cxx=yes ]
 )
 AC_ARG_ENABLE(threads,
-    [ AC_HELP_STRING([--enable-threads],
+    [ AS_HELP_STRING([--enable-threads],
 		[build in thread support (disabled by default)] ) ],
     [ # enable_threads set by default ],
     [ enable_threads=no ]
 )
 AC_ARG_ENABLE(shlib,
-    [ AC_HELP_STRING([--enable-shlib],
+    [ AS_HELP_STRING([--enable-shlib],
 		[build shared libraries (disabled by default)] ) ],
     [ # enable_shlib set by default ],
     [ enable_shlib=no ]
@@ -63,6 +66,7 @@ AC_PROG_CC
 AC_PROG_CXX
 
 # see if we actually have a CXX program
+AC_PATH_PROG(ac_cv_prog_CXX, $CXX)
 if test "$ac_cv_prog_CXX" = "" -o ! -x "$ac_cv_prog_CXX"; then
     AC_MSG_WARN(could not find C++ compiler $ac_cv_prog_CXX)
     enable_cxx=no
@@ -76,35 +80,10 @@ if test "$ac_cv_prog_cc_stdc" = "no" ; then
 fi
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-AC_C_CONST
 
-# we need this for various settings
-AC_HEADER_STDC
-AC_CHECK_HEADER([stdarg.h],
-		[AC_DEFINE(HAVE_STDARG_H,1) AC_SUBST([HAVE_STDARG_H],1)],
-		[AC_DEFINE(HAVE_STDARG_H,0) AC_SUBST([HAVE_STDARG_H],0)])
-AC_CHECK_HEADER([stdio.h],
-		[AC_DEFINE(HAVE_STDIO_H,1) AC_SUBST([HAVE_STDIO_H],1)],
-		[AC_DEFINE(HAVE_STDIO_H,0) AC_SUBST([HAVE_STDIO_H],0)])
-AC_CHECK_HEADER([stdlib.h],
-		[AC_DEFINE(HAVE_STDLIB_H,1) AC_SUBST([HAVE_STDLIB_H],1)],
-		[AC_DEFINE(HAVE_STDLIB_H,0) AC_SUBST([HAVE_STDLIB_H],0)])
-AC_CHECK_HEADER([string.h],
-		[AC_DEFINE(HAVE_STRING_H,1) AC_SUBST([HAVE_STRING_H],1)],
-		[AC_DEFINE(HAVE_STRING_H,0) AC_SUBST([HAVE_STRING_H],0)])
-AC_CHECK_HEADER([strings.h],
-		[AC_DEFINE(HAVE_STRINGS_H,1) AC_SUBST([HAVE_STRINGS_H],1)],
-		[AC_DEFINE(HAVE_STRINGS_H,0) AC_SUBST([HAVE_STRINGS_H],0)])
-AC_CHECK_HEADER([unistd.h],
-		[AC_DEFINE(HAVE_UNISTD_H,1) AC_SUBST([HAVE_UNISTD_H],1)],
-		[AC_DEFINE(HAVE_UNISTD_H,0) AC_SUBST([HAVE_UNISTD_H],0)])
-AC_CHECK_HEADER([sys/types.h],
-		[AC_DEFINE(HAVE_SYS_TYPES_H,1) AC_SUBST([HAVE_SYS_TYPES_H],1)],
-		[AC_DEFINE(HAVE_SYS_TYPES_H,0) AC_SUBST([HAVE_SYS_TYPES_H],0)])
-AC_CHECK_HEADER([sys/mman.h],
-		[AC_DEFINE(HAVE_SYS_MMAN_H,1) AC_SUBST([HAVE_SYS_MMAN_H],1)],
-		[AC_DEFINE(HAVE_SYS_MMAN_H,0) AC_SUBST([HAVE_SYS_MMAN_H],0)])
-
+AC_CHECK_HEADERS([stdarg.h stdio.h stdlib.h string.h strings.h unistd.h sys/types.h sys/mman.h],
+    [],
+    [AC_MSG_WARN([some standard headers not found])])
 ###############################################################################
 # shared library handling
 
@@ -150,7 +129,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([ int foo(int val) { return val + 1; } ])],[
 	# Darwin/Mac OS X - Terry Teague
 	# username terry_teague at domain users.sourceforge.net
 	ac_cv_shared_lib_link_objs=no
-	if test `uname` = "Darwin"; then
+	AS_CASE([$host_os],
+        [darwin*], [
           if (ld -dylib -o conftest.so.t -lc conftest.a) 2>&5; then
             # By convention on some platforms
             # libLLL.so, libLLL.X.so are symlinks to libLLL.X.Y.Z.so
@@ -168,8 +148,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([ int foo(int val) { return val + 1; } ])],[
             # oh well, toss an error
             ac_cv_shared_link_args='# Could not configure shlib linking'
             enable_shlib=no
-          fi
-       elif (ld -shared --whole-archive -soname conftest.so -o conftest.so.t conftest.a) 2>&5; then
+          fi], [
+	if (ld -shared --whole-archive -soname conftest.so -o conftest.so.t conftest.a) 2>&5; then
 		ac_cv_shared_link_args='ld -shared --whole-archive -soname $@ -o $@.t'
 	elif (ld -shared -o conftest.so.t -all -soname conftest.so.t -none -lc -all conftest.a) 2>&5; then
 		ac_cv_shared_link_args='ld -shared -o $@.t -all -soname $@ -none -lc -all'
@@ -180,6 +160,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([ int foo(int val) { return val + 1; } ])],[
 		ac_cv_shared_link_args='# Could not configure shlib linking'
 		enable_shlib=no
 	fi
+	])
 ],[
 	# oh well, toss an error
 	ac_cv_shared_link_args='# Could not configure shlib linking'
@@ -196,13 +177,14 @@ fi
 ###############################################################################
 
 AC_MSG_CHECKING([shared library extension])
-if test `uname` = "Darwin"; then
+AS_CASE([$host_os],
+	[darwin*], [
 	# Darwin/Mac OS X - Terry Teague
 	# username terry_teague at domain users.sourceforge.net
 	ac_cv_shared_lib_suffix=dylib
-else
+], [
 	ac_cv_shared_lib_suffix=so
-fi
+])
 shlibext="$ac_cv_shared_lib_suffix"
 AC_MSG_RESULT([$ac_cv_shared_lib_suffix])
 AC_SUBST(shlibext)
@@ -258,7 +240,7 @@ fi
 # check for unsigned-ness
 #
 AC_MSG_CHECKING([dmalloc size unsigned])
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -276,7 +258,7 @@ int main() { DMALLOC_SIZE x = -1; if (x >= 0) return 0; else return 1; }
 # check for strdup macro (linux)
 #
 AC_MSG_CHECKING([strdup macro])
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_STDLIB_H
 #  include <stdlib.h>
 #endif
@@ -284,10 +266,8 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #  include <string.h>
 #endif
 
-#ifdef strdup
-int main() { return 0; }
-#else
-int main() { return 1; }
+#ifndef strdup
+#  error "no strdup macro"
 #endif
 ]])],
 [ac_cv_strdup_macro=yes],
@@ -300,7 +280,7 @@ AC_MSG_RESULT([$ac_cv_strdup_macro])
 # check for strndup macro (linux)
 #
 AC_MSG_CHECKING([strndup macro])
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_STDLIB_H
 #  include <stdlib.h>
 #endif
@@ -308,10 +288,8 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #  include <string.h>
 #endif
 
-#ifdef strndup
-int main() { return 0; }
-#else
-int main() { return 1; }
+#ifndef strndup
+#  error "no strndup macro"
 #endif
 ]])],
 [ac_cv_strndup_macro=yes],
@@ -324,7 +302,7 @@ AC_MSG_RESULT([$ac_cv_strndup_macro])
 # check for existance of mprotect and associated defines
 #
 AC_CHECK_FUNCS(mprotect)
-AC_MSG_CHECKING([mprotect works])
+AC_CACHE_CHECK([mprotect works], [ac_cv_mprotect_works], [
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #  include <sys/types.h>
@@ -336,9 +314,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
   int prot = PROT_NONE | PROT_READ | PROT_WRITE;
   (void)mprotect(0, 0, prot);
 ]])],
-[ AC_DEFINE(PROTECT_ALLOWED,1) AC_MSG_RESULT([yes]) ],
-[ AC_DEFINE(PROTECT_ALLOWED,0) AC_MSG_RESULT([no]) ]
-)
+[ ac_cv_mprotect_works="yes" ], [ ac_cv_mprotect_works="no" ])
+])
+
+if test "$ac_cv_mprotect_works" = "yes"; then
+  AC_DEFINE([PROTECT_ALLOWED], [1], [Set to 1 if the mprotect function was found and the PROT_NONE, PROT_READ, and PROT_WRITE defines were found in sys/mman.h.  This is so that we can restrict access to certain blocks of memory.])
+fi
 
 ##############################################################################
 AC_MSG_NOTICE([important functionality])
@@ -381,8 +362,13 @@ int main() {
 ]])],
 [ AC_DEFINE(USE_MMAP, 1) ac_cv_use_mmap=yes],
 [ AC_DEFINE(USE_MMAP, 0) ac_cv_use_mmap=no],
-[ AC_DEFINE(USE_MMAP, 0) ac_cv_use_mmap=no]
-)
+[ # For cross-compilation, assume mmap works if the function is available
+  if test "x$ac_cv_func_mmap" = "xyes"; then
+    AC_DEFINE(USE_MMAP, 1) ac_cv_use_mmap=yes
+  else
+    AC_DEFINE(USE_MMAP, 0) ac_cv_use_mmap=no
+  fi
+])
 AC_MSG_RESULT([$ac_cv_use_mmap])
 
 #
@@ -811,7 +797,7 @@ AC_MSG_NOTICE([various functions for argument checking])
 # NOTE: some duplicated from above
 AC_CHECK_FUNCS(atoi atol)
 AC_CHECK_FUNCS(bcmp bcopy bzero)
-AC_CHECK_FUNCS([[index]])
+AC_CHECK_FUNCS(index)
 AC_CHECK_FUNCS(memccpy memchr memcmp memcpy memmove memset)
 AC_CHECK_FUNCS(rindex)
 AC_CHECK_FUNCS(strdup strndup)
@@ -828,15 +814,6 @@ rm -f $newfile.t
 echo '/* this is dmalloc.h.2 */' > $newfile.t
 echo '/* produced by configure, inserted into dmalloc.h */' >> $newfile.t
 echo '' >> $newfile.t
-
-if test "$ac_cv_c_const" = "yes"; then
-	echo '/* const is available */' >> $newfile.t
-else
-        echo '/* const is not available */' >> $newfile.t
-	echo '#ifndef const' >> $newfile.t
-	echo '#define const' >> $newfile.t
-	echo '#endif' >> $newfile.t
-fi
 
 if test "$ac_cv_strdup_macro" = "yes"; then
 	echo '/* strdup is a macro */' >> $newfile.t
@@ -897,7 +874,6 @@ fi
 ],
 [
 # dmalloc.h.2 initialization commands
-ac_cv_c_const=$ac_cv_c_const
 ac_cv_strdup_macro=$ac_cv_strdup_macro
 ac_cv_strndup_macro=$ac_cv_strndup_macro
 ac_cv_type_size_t=$ac_cv_type_size_t
