@@ -227,6 +227,34 @@ fi
 
 ###############################################################################
 #
+# autoheader templates
+#
+AH_TEMPLATE([ABORT_OKAY],                 [Define to 1 if abort is safe to call])
+AH_TEMPLATE([ALLOCATION_ALIGNMENT],       [Byte alignment for allocations])
+AH_TEMPLATE([BASIC_BLOCK],                [Log2 of basic block size])
+AH_TEMPLATE([CONSTRUCTOR_WORKS],          [Define to 1 if constructor attribute works])
+AH_TEMPLATE([DESTRUCTOR_WORKS],           [Define to 1 if destructor attribute works])
+AH_TEMPLATE([DMALLOC_SIZE],               [Type used for dmalloc sizes])
+AH_TEMPLATE([DMALLOC_SIZE_UNSIGNED],      [Define to 1 if DMALLOC_SIZE is unsigned])
+AH_TEMPLATE([GETENV_SAFE],                [Define to 1 if getenv is safe to call])
+AH_TEMPLATE([HAVE_GETENVIRONMENTVARIABLEA],[Define to 1 if GetEnvironmentVariableA is available])
+AH_TEMPLATE([HAVE_PTHREAD_H],             [Define to 1 if <pthread.h> is available])
+AH_TEMPLATE([HAVE_PTHREADS_H],            [Define to 1 if <pthreads.h> is available])
+AH_TEMPLATE([HAVE_SIGNAL_H],              [Define to 1 if <signal.h> is available])
+AH_TEMPLATE([HAVE_SYS_CYGWIN_H],          [Define to 1 if <sys/cygwin.h> is available])
+AH_TEMPLATE([HAVE_W32API_WINBASE_H],      [Define to 1 if <w32api/winbase.h> is available])
+AH_TEMPLATE([HAVE_W32API_WINDEF_H],       [Define to 1 if <w32api/windef.h> is available])
+AH_TEMPLATE([IDENT_WORKS],                [Define to 1 if #ident works])
+AH_TEMPLATE([PNT_ARITH_TYPE],             [Type used for pointer arithmetic])
+AH_TEMPLATE([PROTECT_ALLOWED],            [Define to 1 if mprotect works])
+AH_TEMPLATE([RETURN_MACROS_WORK],         [Define to 1 if return.h macros work])
+AH_TEMPLATE([SIGNAL_OKAY],                [Define to 1 if signal() works])
+AH_TEMPLATE([THREAD_LOCK_INIT_VAL],       [Initializer for pthread mutex attributes])
+AH_TEMPLATE([THREAD_MUTEX_T],             [Type used for pthread mutex])
+AH_TEMPLATE([USE_MMAP],                   [Define to 1 if mmap can be used])
+
+###############################################################################
+#
 # check for size_t
 #
 AC_TYPE_SIZE_T
