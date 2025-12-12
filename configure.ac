@@ -44,7 +44,18 @@ export dmalloc_version_patch
 dmalloc_version="${dmalloc_version_major}.${dmalloc_version_minor}.${dmalloc_version_patch}"
 export dmalloc_version
 
-AC_MSG_NOTICE([configurations for the dmalloc library version $dmalloc_version])
+# Set up colors for messages
+if tput setaf 1 >/dev/null 2>&1; then
+    notice=$(tput setaf 6)
+    warn=$(tput setaf 3)
+    error=$(tput setaf 1)
+    clr=$(tput sgr0)
+fi
+AC_DEFUN([MSG_NOTICE], [AC_MSG_NOTICE([${notice}$1${clr}])])
+AC_DEFUN([MSG_WARN], [AC_MSG_WARN([${warn}$1${clr}])])
+AC_DEFUN([MSG_ERROR], [AC_MSG_ERROR([${error}$1${clr}])])
+
+MSG_NOTICE([configurations for the dmalloc library version $dmalloc_version])
 
 ##############################################################################
 # arguments
@@ -63,7 +74,7 @@ AC_ARG_ENABLE(threads,
 )
 
 ##############################################################################
-AC_MSG_NOTICE([build utilities])
+MSG_NOTICE([build utilities])
 
 AC_PROG_CC
 AC_PROG_CXX
@@ -117,7 +128,7 @@ AM_CONDITIONAL([BUILD_DOCS], [false])
 
 AC_CHECK_HEADERS([stdarg.h stdio.h stdlib.h string.h strings.h unistd.h sys/types.h sys/mman.h],
     [],
-    [AC_MSG_WARN([some standard headers not found])])
+    [MSG_WARN([some standard headers not found])])
 ###############################################################################
 
 AC_MSG_CHECKING([C++ support])
@@ -266,7 +277,7 @@ if test "$ac_cv_mprotect_works" = "yes"; then
 fi
 
 ##############################################################################
-AC_MSG_NOTICE([important functionality])
+MSG_NOTICE([important functionality])
 
 AC_CHECK_FUNCS(mmap munmap sbrk)
 
@@ -540,11 +551,11 @@ int main() {
 )
 
 if test "x$getenv_safe" != "xyes" && test "x$have_getenvironmentvariablea" != "xyes" ; then
-  AC_MSG_WARN([Since getenv allocates memory, it is not safe for dmalloc to use.])
-  AC_MSG_WARN([You may want to add the following code to the front of main():])
-  AC_MSG_WARN([[  #ifdef DMALLOC]])
-  AC_MSG_WARN([[    dmalloc_debug_setup(getenv("DMALLOC_OPTIONS"));]])
-  AC_MSG_WARN([[  #endif]])
+  MSG_WARN([Since getenv allocates memory, it is not safe for dmalloc to use.])
+  MSG_WARN([You may want to add the following code to the front of main():])
+  MSG_WARN([[  #ifdef DMALLOC]])
+  MSG_WARN([[    dmalloc_debug_setup(getenv("DMALLOC_OPTIONS"));]])
+  MSG_WARN([[  #endif]])
 fi
 
 ############
@@ -637,7 +648,7 @@ static void foo (void) { }
 )
 
 ##############################################################################
-AC_MSG_NOTICE([pthread particulars])
+MSG_NOTICE([pthread particulars])
 
 XX_OLD_LIBS=$LIBS
 
@@ -687,7 +698,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 LIBS=$XX_OLD_LIBS
 
 ##############################################################################
-AC_MSG_NOTICE([functions])
+MSG_NOTICE([functions])
 
 # auto-shutdown functions
 AC_CHECK_FUNCS(atexit on_exit)
@@ -713,14 +724,14 @@ AC_CHECK_FUNCS(strchr strrchr)
 AC_CHECK_FUNCS(strlen strnlen strcmp strcpy strsep)
 
 ##############################################################################
-AC_MSG_NOTICE([various functions for argv files])
+MSG_NOTICE([various functions for argv files])
 
 # NOTE: some duplicated from above
 AC_CHECK_FUNCS(atoi atol getenv)
 AC_CHECK_FUNCS(strchr strcmp strcpy strlen strncmp strncpy strsep)
 
 ##############################################################################
-AC_MSG_NOTICE([various functions for argument checking])
+MSG_NOTICE([various functions for argument checking])
 
 # NOTE: some duplicated from above
 AC_CHECK_FUNCS(atoi atol)
@@ -793,7 +804,7 @@ echo "#define DMALLOC_VERSION_MINOR ${dmalloc_version_minor} /* 0.X.0 */" >> $ne
 echo "#define DMALLOC_VERSION_PATCH ${dmalloc_version_patch} /* 0.0.X */" >> $newfile.t
 echo '' >> $newfile.t
 if cmp -s $newfile $newfile.t 2>/dev/null; then
-	AC_MSG_NOTICE([$newfile is unchanged])
+	MSG_NOTICE([$newfile is unchanged])
 	rm -f $newfile.t
 else
 	rm -f $newfile
@@ -819,7 +830,7 @@ static char *dmalloc_version = "${dmalloc_version}";
 #endif /* ! __VERSION_H__ */
 EOF
 if cmp -s $newfile $newfile.t 2>/dev/null; then
-	AC_MSG_NOTICE([$newfile is unchanged])
+	MSG_NOTICE([$newfile is unchanged])
 	rm -f $newfile.t
 else
 	rm -f $newfile
@@ -847,7 +858,7 @@ echo '' >> $newfile.t
 cat $srcdir/settings.dist >> $newfile.t
 
 if cmp -s $newfile.t $newfile 2>/dev/null; then
-	AC_MSG_NOTICE([$newfile is unchanged])
+	MSG_NOTICE([$newfile is unchanged])
 	rm -f $newfile.t
 else
 	rm -f $newfile
@@ -856,15 +867,15 @@ fi
 ])
 AC_OUTPUT
 
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([Please check-out Makefile and conf.h to make sure that])
-AC_MSG_NOTICE([sane configuration values were a result.])
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([You may want to change values in settings.h before])
-AC_MSG_NOTICE([running 'make'.])
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([To run the basic library tests, you can execute:])
-AC_MSG_NOTICE([  make light])
-AC_MSG_NOTICE([or])
-AC_MSG_NOTICE([  make heavy])
-AC_MSG_NOTICE([])
+MSG_NOTICE([])
+MSG_NOTICE([Please check-out Makefile and conf.h to make sure that])
+MSG_NOTICE([sane configuration values were a result.])
+MSG_NOTICE([])
+MSG_NOTICE([You may want to change values in settings.h before])
+MSG_NOTICE([running 'make'.])
+MSG_NOTICE([])
+MSG_NOTICE([To run the basic library tests, you can execute:])
+MSG_NOTICE([  make light])
+MSG_NOTICE([or])
+MSG_NOTICE([  make heavy])
+MSG_NOTICE([])
