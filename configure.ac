@@ -148,7 +148,6 @@ fi
 #
 AH_TEMPLATE([ABORT_OKAY],                 [Define to 1 if abort is safe to call])
 AH_TEMPLATE([ALLOCATION_ALIGNMENT],       [Byte alignment for allocations])
-AH_TEMPLATE([BASIC_BLOCK],                [Log2 of basic block size])
 AH_TEMPLATE([CONSTRUCTOR_WORKS],          [Define to 1 if constructor attribute works])
 AH_TEMPLATE([DESTRUCTOR_WORKS],           [Define to 1 if destructor attribute works])
 AH_TEMPLATE([DMALLOC_SIZE],               [Type used for dmalloc sizes])
@@ -320,57 +319,35 @@ AC_MSG_RESULT([$ac_cv_use_mmap])
 # check for basic block size
 #
 AC_CHECK_FUNCS(getpagesize)
-AC_MSG_CHECKING([basic-block size])
-ac_cv_page_size=0
-if test $ac_cv_page_size = 0; then
-   AC_RUN_IFELSE([AC_LANG_SOURCE([
+dnl Windows separates hardware page size (dwPageSize is usually 4kb) and
+dnl allocation granularity (normally 64kb).
+dnl To keep things simple and avoid counting committed memory,
+dnl we use allocation granularity as the basic block size on Windows.
+AC_CACHE_CHECK([basic-block size], [ac_cv_page_size], [
+AC_RUN_IFELSE([AC_LANG_PROGRAM([
 #if HAVE_UNISTD_H
   #include <unistd.h>
 #endif
-int main() { if (getpagesize()<=2048) return 0; else return 1; }
-])],
-	[ ac_cv_page_size=11 ],
-	[ ac_cv_page_size=0  ],
-	[ ac_cv_page_size=0  ] )
-fi
-if test $ac_cv_page_size = 0; then
-   AC_RUN_IFELSE([AC_LANG_SOURCE([
-#if HAVE_UNISTD_H
-  #include <unistd.h>
+  #include <stdio.h>
+#if _WIN32
+  #define WIN32_LEAN_AND_MEAN
+  #include <windows.h>
+  static int getpagesize () {
+    SYSTEM_INFO si; GetSystemInfo(&si);
+    return si.dwAllocationGranularity;
+  }
 #endif
-int main() { if (getpagesize()<=4096) return 0; else return 1; }
+  ], [
+  long ps = getpagesize(); int bs;
+  for (bs = -1; ps; ++bs, ps >>= 1) {}
+  fprintf(stderr, "%ld\n", bs);
 ])],
-	[ ac_cv_page_size=12 ],
-	[ ac_cv_page_size=0  ],
-	[ ac_cv_page_size=0  ] )
-fi
-if test $ac_cv_page_size = 0; then
-   AC_RUN_IFELSE([AC_LANG_SOURCE([
-#if HAVE_UNISTD_H
-  #include <unistd.h>
-#endif
-int main() { if (getpagesize()<=8192) return 0; else return 1; }
-])],
-	[ ac_cv_page_size=13 ],
-	[ ac_cv_page_size=0  ],
-	[ ac_cv_page_size=0  ] )
-fi
-if test $ac_cv_page_size = 0; then
-   AC_RUN_IFELSE([AC_LANG_SOURCE([
-#if HAVE_UNISTD_H
-  #include <unistd.h>
-#endif
-int main() { if (getpagesize()<=16384) return 0; else return 1; }
-])],
-	[ ac_cv_page_size=14 ],
-	[ ac_cv_page_size=0  ],
-	[ ac_cv_page_size=0  ] )
-fi
-if test $ac_cv_page_size = 0; then
-    ac_cv_page_size=15
-fi
-AC_DEFINE_UNQUOTED([BASIC_BLOCK],[$ac_cv_page_size])
-AC_MSG_RESULT([$ac_cv_page_size])
+	[ ac_cv_page_size=$(./conftest$EXEEXT 2>&1) ],
+	[ ac_cv_page_size=15 ], [ ac_cv_page_size=15 ])
+])
+AC_DEFINE_UNQUOTED([BASIC_BLOCK],[$ac_cv_page_size], [This is the basic block size in bits.  If possible, the configure script will set this to be the value returned by the getpagesize() function.  If not then some sort of best guess will be necessary. 15 (meaning basic block size of 32k) will probably be good.
+
+NOTE: some sbrk functions round to the correct page-size. No problems aside from a possible small increase in the administration overhead should happen if this value is too high.])
 
 #
 # data-alignment size...
