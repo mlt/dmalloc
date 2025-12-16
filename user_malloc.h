@@ -159,6 +159,7 @@ char	*dmalloc_strndup(const char *file, const int line,
  * size -> Number of bytes requested.
  */
 extern
+RESTRICT
 DMALLOC_PNT	malloc(DMALLOC_SIZE size);
 
 /*
@@ -175,6 +176,7 @@ DMALLOC_PNT	malloc(DMALLOC_SIZE size);
  * size -> The number of bytes in each element.
  */
 extern
+RESTRICT
 DMALLOC_PNT	calloc(DMALLOC_SIZE num_elements, DMALLOC_SIZE size);
 
 /*
@@ -192,6 +194,7 @@ DMALLOC_PNT	calloc(DMALLOC_SIZE num_elements, DMALLOC_SIZE size);
  * new_size -> New number of bytes requested for the old pointer.
  */
 extern
+RESTRICT
 DMALLOC_PNT	realloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size);
 
 /*

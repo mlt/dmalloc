@@ -10,6 +10,14 @@
 #define DMALLOC_FREE_RET_INT
 #endif
 
+#if _MSC_VER
+#define RESTRICT __declspec(restrict)
+#elif __GNUC__
+#define RESTRICT __attribute__((malloc))
+#else
+#define RESTRICT
+#endif
+
 /*
  * Malloc function return codes
  */
