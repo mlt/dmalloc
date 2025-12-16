@@ -24,6 +24,9 @@
  * heap as well as reporting the current position of the heap.
  */
 
+#define DMALLOC_DISABLE
+
+#include "conf.h"
 #if HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -35,9 +38,6 @@
 #  include <windows.h>
 #endif /* ifdef _WIN32 */
 
-#define DMALLOC_DISABLE
-
-#include "conf.h"
 #include "dmalloc.h"
 
 #include "append.h"

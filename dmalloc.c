@@ -32,6 +32,7 @@
 
 #define DMALLOC_DISABLE
 
+#include "conf.h"
 #if HAVE_STRING_H
 # include <string.h>
 #endif
@@ -42,7 +43,6 @@
 # include <stdlib.h>
 #endif
 
-#include "conf.h"
 #include "dmalloc_argv.h"			/* for argument processing */
 #include "dmalloc.h"
 

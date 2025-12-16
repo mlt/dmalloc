@@ -24,6 +24,9 @@
  * function just in case your system does not have them.
  */
 
+#define DMALLOC_DISABLE
+
+#include "conf.h"
 #if HAVE_STDARG_H
 # include <stdarg.h>				/* for ... */
 #endif
@@ -35,9 +38,6 @@
 # include <stdlib.h>				/* for getenv */
 #endif
 
-#define DMALLOC_DISABLE
-
-#include "conf.h"
 #include "dmalloc.h"
 
 #include "compat.h"

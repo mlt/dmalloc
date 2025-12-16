@@ -26,6 +26,9 @@
 
 #include <ctype.h>
 
+#define DMALLOC_DISABLE
+
+#include "conf.h"
 #if HAVE_STRING_H
 # include <string.h>
 #endif
@@ -33,9 +36,6 @@
 # include <stdlib.h>
 #endif
 
-#define DMALLOC_DISABLE
-
-#include "conf.h"
 
 #if LOG_PNT_TIMEVAL
 #ifdef TIMEVAL_INCLUDE

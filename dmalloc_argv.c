@@ -21,6 +21,7 @@
 
 #include <ctype.h>
 
+#include "conf.h"
 #if HAVE_STRING_H
 # include <string.h>
 #endif
@@ -31,7 +32,6 @@
 # include <stdlib.h>
 #endif
 
-#include "conf.h"
 
 #include "append.h"
 #include "dmalloc_argv.h"

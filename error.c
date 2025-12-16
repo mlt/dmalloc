@@ -26,6 +26,7 @@
 
 #include <fcntl.h>				/* for O_WRONLY, etc. */
 
+#include "conf.h"				/* up here for _INCLUDE */
 #if HAVE_STDIO_H
 # include <stdio.h>				/* for FILE */
 #endif
@@ -39,7 +40,6 @@
 # include <unistd.h>				/* for _exit */
 #endif
 
-#include "conf.h"				/* up here for _INCLUDE */
 
 /* for KILL_PROCESS define */
 #if USE_ABORT == 0

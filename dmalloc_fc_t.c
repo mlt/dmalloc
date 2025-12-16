@@ -19,6 +19,9 @@
  * The author may be contacted via https://dmalloc.com/
  */
 
+#define DMALLOC_FUNC_CHECK
+
+#include "conf.h"
 #if HAVE_STDIO_H
 # include <stdio.h>				/* for FILE */
 #endif
@@ -34,10 +37,6 @@
 #if HAVE_UNISTD_H
 # include <unistd.h>				/* for getpid */
 #endif
-
-#define DMALLOC_FUNC_CHECK
-
-#include "conf.h"
 
 #if HAVE_TIME
 # ifdef TIME_INCLUDE

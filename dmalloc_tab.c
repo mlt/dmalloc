@@ -26,6 +26,7 @@
  * Inspired by code from PSM.  Thanks much.
  */
 
+#include "conf.h"
 #if HAVE_STDLIB_H
 # include <stdlib.h>				/* for qsort */
 #endif
@@ -33,7 +34,6 @@
 # include <string.h>
 #endif
 
-#include "conf.h"
 #include "append.h"
 #include "chunk.h"
 #include "compat.h"

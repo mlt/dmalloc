@@ -25,6 +25,7 @@
  * chunk.c which is the real heap manager.
  */
 
+#include "conf.h"				/* up here for _INCLUDE */
 #if HAVE_STDIO_H
 # include <stdio.h>				/* for FILE */
 #endif
@@ -53,8 +54,6 @@
 #if HAVE_W32API_WINBASE_H
 # include <w32api/winbase.h>
 #endif
-
-#include "conf.h"				/* up here for _INCLUDE */
 
 #if LOG_PNT_TIMEVAL
 # ifdef TIMEVAL_INCLUDE

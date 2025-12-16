@@ -26,6 +26,7 @@
 
 #include <stdio.h>				/* for stdin */
 
+#include "conf.h"
 #if HAVE_STDLIB_H
 # include <stdlib.h>				/* for atoi + */
 #endif
@@ -36,7 +37,6 @@
 # include <unistd.h>
 #endif
 
-#include "conf.h"
 #include "append.h"
 #include "compat.h"				/* for loc_snprintf */
 
