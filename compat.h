@@ -194,6 +194,7 @@ char	*strrchr(const char *str, const int ch);
  * string.
  */
 extern
+DMALLOC_API
 char	*strsep(char **string_p, const char *delim);
 #endif /* if HAVE_STRSEP == 0 */
 
@@ -201,6 +202,7 @@ char	*strsep(char **string_p, const char *delim);
  * Local getenv which handles some portability stuff.
  */
 extern
+DMALLOC_API
 char	*loc_getenv(const char *var, char *buf, const int buf_size,
 		    const int stay_safe);
 

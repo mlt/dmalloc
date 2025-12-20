@@ -9,10 +9,12 @@
 
 /* internal dmalloc error number for reference purposes only */
 extern
+DMALLOC_API
 int		dmalloc_errno;
 
 /* logfile for dumping dmalloc info, DMALLOC_LOGFILE env var overrides this */
 extern
+DMALLOC_API
 char		*dmalloc_logpath;
 
 /*
@@ -21,6 +23,7 @@ char		*dmalloc_logpath;
  * Shutdown the dmalloc library and provide statistics if necessary.
  */
 extern
+DMALLOC_API
 void	dmalloc_shutdown(void);
 
 #if FINI_DMALLOC
@@ -33,6 +36,7 @@ void	dmalloc_shutdown(void);
  * close functions which are more portable.
  */
 extern
+DMALLOC_API
 void	__fini_dmalloc(void);
 #endif /* if FINI_DMALLOC */
 
@@ -61,6 +65,7 @@ void	__fini_dmalloc(void);
  * of memory.
  */
 extern
+DMALLOC_API
 DMALLOC_PNT	dmalloc_malloc(const char *file, const int line,
 			       const DMALLOC_SIZE size, const int func_id,
 			       const DMALLOC_SIZE alignment,
@@ -91,6 +96,7 @@ DMALLOC_PNT	dmalloc_malloc(const char *file, const int line,
  * of memory.
  */
 extern
+DMALLOC_API
 DMALLOC_PNT	dmalloc_realloc(const char *file, const int line,
 				DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size,
 				const int func_id, const int xalloc_b);
@@ -117,6 +123,7 @@ DMALLOC_PNT	dmalloc_realloc(const char *file, const int line,
  * dmalloc.h.
  */
 extern
+DMALLOC_API
 int	dmalloc_free(const char *file, const int line, DMALLOC_PNT pnt,
 		     const int func_id);
 
@@ -142,6 +149,7 @@ int	dmalloc_free(const char *file, const int line, DMALLOC_PNT pnt,
  * of memory.
  */
 extern
+DMALLOC_API
 char	*dmalloc_strndup(const char *file, const int line,
 			 const char *string, const int max_len,
 			 const int xalloc_b);
@@ -213,6 +221,7 @@ DMALLOC_PNT	realloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size);
  * new_size -> New number of bytes requested for the old pointer.
  */
 extern
+DMALLOC_API
 DMALLOC_PNT	recalloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size);
 
 /*
@@ -233,6 +242,7 @@ DMALLOC_PNT	recalloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size);
  * size -> Number of bytes requested.
  */
 extern
+DMALLOC_API
 DMALLOC_PNT	memalign(DMALLOC_SIZE alignment, DMALLOC_SIZE size);
 
 /*
@@ -249,6 +259,7 @@ DMALLOC_PNT	memalign(DMALLOC_SIZE alignment, DMALLOC_SIZE size);
  * size -> Number of bytes requested.
  */
 extern
+DMALLOC_API
 DMALLOC_PNT	valloc(DMALLOC_SIZE size);
 
 #ifndef DMALLOC_STRDUP_MACRO
@@ -284,6 +295,7 @@ char	*strdup(const char *string);
  * max_len -> Max length of the string to duplicate.
  */
 extern
+DMALLOC_API
 char	*strndup(const char *string, const DMALLOC_SIZE max_len);
 #endif /* ifndef DMALLOC_STRNDUP_MACRO */
 
@@ -315,6 +327,7 @@ DMALLOC_FREE_RET	free(DMALLOC_PNT pnt);
  * pnt -> Existing pointer we are freeing.
  */
 extern
+DMALLOC_API
 DMALLOC_FREE_RET	cfree(DMALLOC_PNT pnt);
 
 /*
@@ -330,6 +343,7 @@ DMALLOC_FREE_RET	cfree(DMALLOC_PNT pnt);
  * pnt -> Pointer we are verifying.  If 0L then check the entire heap.
  */
 extern
+DMALLOC_API
 int	dmalloc_verify(const DMALLOC_PNT pnt);
 
 /*
@@ -345,6 +359,7 @@ int	dmalloc_verify(const DMALLOC_PNT pnt);
  * pnt -> Pointer we are verifying.  If 0L then check the entire heap.
  */
 extern
+DMALLOC_API
 int	malloc_verify(const DMALLOC_PNT pnt);
 
 /*
@@ -380,6 +395,7 @@ int	malloc_verify(const DMALLOC_PNT pnt);
  * bytes if inside of the heap.  If 0 then don't check the size.
  */
 extern
+DMALLOC_API
 int	dmalloc_verify_pnt_strsize(const char *file, const int line,
 				   const char *func, const void *pnt,
 				   const int exact_b, const int strlen_b,
@@ -417,6 +433,7 @@ int	dmalloc_verify_pnt_strsize(const char *file, const int line,
  * strlen, see dmalloc_verify_pnt_strsize.
  */
 extern
+DMALLOC_API
 int	dmalloc_verify_pnt(const char *file, const int line, const char *func,
 			   const void *pnt, const int exact_b,
 			   const int min_size);
@@ -437,6 +454,7 @@ int	dmalloc_verify_pnt(const char *file, const int line, const char *func,
  * flags -> Flag value to set.  Pass in 0 to disable all debugging.
  */
 extern
+DMALLOC_API
 unsigned int	dmalloc_debug(const unsigned int flags);
 
 /*
@@ -446,6 +464,7 @@ unsigned int	dmalloc_debug(const unsigned int flags);
  * save a dmalloc library state to be restored later.
  */
 extern
+DMALLOC_API
 unsigned int	dmalloc_debug_current(void);
 
 /*
@@ -464,6 +483,7 @@ unsigned int	dmalloc_debug_current(void);
  * env_buf_size -> Size of the buffer.
  */
 extern
+DMALLOC_API
 char	*dmalloc_debug_current_env(char *env_buf, const int env_buf_size);
 
 /*
@@ -480,6 +500,7 @@ char	*dmalloc_debug_current_env(char *env_buf, const int env_buf_size);
  * options_str -> Options string to set the library flags.
  */
 extern
+DMALLOC_API
 void	dmalloc_debug_setup(const char *options_str);
 
 /*
@@ -522,6 +543,7 @@ void	dmalloc_debug_setup(const char *options_str);
  * otherwise no seen information is available and it will be set to 0.
  */
 extern
+DMALLOC_API
 int	dmalloc_examine(const DMALLOC_PNT pnt, DMALLOC_SIZE *user_size_p,
 			DMALLOC_SIZE *total_size_p, char **file_p,
 			unsigned int *line_p, DMALLOC_PNT *ret_attr_p,
@@ -539,6 +561,7 @@ int	dmalloc_examine(const DMALLOC_PNT pnt, DMALLOC_SIZE *user_size_p,
  * to NULL to disable.
  */
 extern
+DMALLOC_API
 void	dmalloc_track(const dmalloc_track_t track_func);
 
 /*
@@ -554,6 +577,7 @@ void	dmalloc_track(const dmalloc_track_t track_func);
  * LOG_PNT_ITERATION define in settings.h.
  */
 extern
+DMALLOC_API
 unsigned long	dmalloc_mark(void);
 
 /*
@@ -562,6 +586,7 @@ unsigned long	dmalloc_mark(void);
  * Return the total number of bytes allocated by the program so far.
  */
 extern
+DMALLOC_API
 unsigned long	dmalloc_memory_allocated(void);
 
 /*
@@ -570,6 +595,7 @@ unsigned long	dmalloc_memory_allocated(void);
  * Get the page-size being used by dmalloc.
  */
 extern
+DMALLOC_API
 unsigned int	dmalloc_page_size(void);
 
 /*
@@ -591,6 +617,7 @@ unsigned int	dmalloc_page_size(void);
  * free_b -> Set to 1 to count the new pointers that are freed.
  */
 extern
+DMALLOC_API
 unsigned long	dmalloc_count_changed(const unsigned long mark,
 				      const int not_freed_b, const int free_b);
 
@@ -600,6 +627,7 @@ unsigned long	dmalloc_count_changed(const unsigned long mark,
  * Dump dmalloc statistics to logfile.
  */
 extern
+DMALLOC_API
 void	dmalloc_log_stats(void);
 
 /*
@@ -608,6 +636,7 @@ void	dmalloc_log_stats(void);
  * Dump unfreed-memory info to logfile.
  */
 extern
+DMALLOC_API
 void	dmalloc_log_unfreed(void);
 
 /*
@@ -630,6 +659,7 @@ void	dmalloc_log_unfreed(void);
  * changed otherwise the summaries will be logged.
  */
 extern
+DMALLOC_API
 void	dmalloc_log_changed(const unsigned long mark, const int not_freed_b,
 			    const int free_b, const int details_b);
 
@@ -646,6 +676,7 @@ void	dmalloc_log_changed(const unsigned long mark, const int not_freed_b,
  * args -> Already converted pointer to a stdarg list.
  */
 extern
+DMALLOC_API
 void	dmalloc_vmessage(const char *format, va_list args);
 
 /*
@@ -661,6 +692,7 @@ void	dmalloc_vmessage(const char *format, va_list args);
  * ... -> Variable argument list.
  */
 extern
+DMALLOC_API
 void	dmalloc_message(const char *format, ...)
 #ifdef __GNUC__
   __attribute__ ((format (printf, 1, 2)))
@@ -707,6 +739,7 @@ void	dmalloc_message(const char *format, ...)
  * set to the maximum allocated with 1 call by the user process.
  */
 extern
+DMALLOC_API
 void	dmalloc_get_stats(DMALLOC_PNT *heap_low_p,
 			  DMALLOC_PNT *heap_high_p,
 			  unsigned long *total_space_p,
@@ -729,6 +762,7 @@ void	dmalloc_get_stats(DMALLOC_PNT *heap_low_p,
  * error_num -> Error number we are converting.
  */
 extern
+DMALLOC_API
 const char	*dmalloc_strerror(const int error_num);
 
 /*<<<<<<<<<<   This is end of the auto-generated output from fillproto. */

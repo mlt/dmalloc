@@ -26,6 +26,14 @@ AC_CONFIG_HEADERS([conf.h])
 
 # Add settings.h include at the end of conf.h
 AH_BOTTOM([
+#if defined(DLL_EXPORT)
+#define DMALLOC_API __declspec(dllexport)
+#elif _WIN32 && !defined(DMALLOC_STATIC_LINK)
+#define DMALLOC_API __declspec(dllimport)
+#else
+#define DMALLOC_API
+#endif
+
 #ifndef __CONF_H__
 #define __CONF_H__
 #include "settings.h"

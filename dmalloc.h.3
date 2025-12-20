@@ -10,6 +10,17 @@
 #define DMALLOC_FREE_RET_INT
 #endif
 
+#ifndef DMALLOC_API
+	/* DLL_EXPORT is automagically defined by libtool on Windows for SO */
+	#if defined(DLL_EXPORT)
+		#define DMALLOC_API __declspec(dllexport)
+	#elif defined(_WIN32) && !defined(DMALLOC_STATIC_LINK)
+		#define DMALLOC_API __declspec(dllimport)
+	#else
+		#define DMALLOC_API
+	#endif /* defined(_WIN32) && defined(DLL_EXPORT) */
+#endif /* DMALLOC_API */
+
 #if _MSC_VER
 #define RESTRICT __declspec(restrict)
 #elif __GNUC__

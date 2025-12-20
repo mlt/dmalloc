@@ -28,6 +28,7 @@
  * Break up ADDR_ALL into ADDR_P and ADDR_COUNT_P
  */
 extern
+DMALLOC_API
 void	_dmalloc_address_break(const char *addr_all, DMALLOC_PNT *addr_p,
 			       unsigned long *addr_count_p);
 
@@ -35,6 +36,7 @@ void	_dmalloc_address_break(const char *addr_all, DMALLOC_PNT *addr_p,
  * Break up START_ALL into SFILE_P, SLINE_P, and SCOUNT_P
  */
 extern
+DMALLOC_API
 void	_dmalloc_start_break(const char *start_all, char **start_file_p,
 			     int *start_line_p, unsigned long *start_iter_p,
 			     unsigned long *start_size_p);
@@ -44,6 +46,7 @@ void	_dmalloc_start_break(const char *start_all, char **start_file_p,
  * string.
  */
 extern
+DMALLOC_API
 void	_dmalloc_environ_process(const char *env_str, DMALLOC_PNT *addr_p,
 				 unsigned long *addr_count_p,
 				 unsigned int *debug_p,
@@ -59,6 +62,7 @@ void	_dmalloc_environ_process(const char *env_str, DMALLOC_PNT *addr_p,
  * info) into BUF.
  */
 extern
+DMALLOC_API
 void	_dmalloc_environ_set(char *buf, const int buf_size,
 			     const int long_tokens_b,
 			     const DMALLOC_PNT address,

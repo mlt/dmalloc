@@ -39,6 +39,7 @@
  * character will be added.
  */
 extern
+DMALLOC_API
 char	*append_string(char *dest, const char *limit, const char *value);
 
 /*
@@ -48,6 +49,7 @@ char	*append_string(char *dest, const char *limit, const char *value);
  * Chmela which is released under GPLv3.
  */
 extern
+DMALLOC_API
 char	*append_long(char *dest, char *limit, long value, int base);
 
 /*
@@ -57,6 +59,7 @@ char	*append_long(char *dest, char *limit, long value, int base);
  * written by Lukas Chmela. Released under GPLv3.
  */
 extern
+DMALLOC_API
 char	*append_ulong(char *dest, char *limit, unsigned long value, int base);
 
 /*
@@ -66,6 +69,7 @@ char	*append_ulong(char *dest, char *limit, unsigned long value, int base);
  * Chmela which is released under GPLv3.
  */
 extern
+DMALLOC_API
 char	*append_pointer(char *dest, char *limit, PNT_ARITH_TYPE value, int base);
 
 /*
@@ -73,6 +77,7 @@ char	*append_pointer(char *dest, char *limit, PNT_ARITH_TYPE value, int base);
  * characters added will be returned.  No \0 character will be added.
  */
 extern
+DMALLOC_API
 char	*append_vformat(char *dest, char *limit, const char *format,
 			va_list args);
 
@@ -81,6 +86,7 @@ char	*append_vformat(char *dest, char *limit, const char *format,
  * added characters will be returned.  No \0 character will be added.
  */
 extern
+DMALLOC_API
 char	*append_format(char *dest, char *limit, const char *format, ...);
 
 /*
@@ -89,6 +95,7 @@ char	*append_format(char *dest, char *limit, const char *format, ...);
  * end of the \0 character will be returned.
  */
 extern
+DMALLOC_API
 char    *append_null(char *dest, char *limit);
 
 /*
@@ -97,6 +104,7 @@ char    *append_null(char *dest, char *limit);
  * causing the library to go recursive.
  */
 extern
+DMALLOC_API
 int	loc_vsnprintf(char *buf, const int size, const char *format,
 		      va_list args);
 
@@ -106,36 +114,42 @@ int	loc_vsnprintf(char *buf, const int size, const char *format,
  * causing the library to go recursive.
  */
 extern
+DMALLOC_API
 int	loc_snprintf(char *buf, const int size, const char *format, ...);
 
 /*
  * Local implementation of printf so we can use %p and other non-standard formats.
  */
 extern
+DMALLOC_API
 void	loc_printf(const char *format, ...);
 
 /*
  * Local implementation of fprintf so we can use %p and other non-standard formats.
  */
 extern
+DMALLOC_API
 void	loc_fprintf(FILE *file, const char *format, ...);
 
 /*
  * Local implementation of vfprintf so we can use %p and other non-standard formats.
  */
 extern
+DMALLOC_API
 void	loc_vfprintf(FILE *file, const char *format, va_list args);
 
 /*
  * Local implementation of dprintf so we can use %p and other non-standard formats.
  */
 extern
+DMALLOC_API
 void	loc_dprintf(int fd, const char *format, ...);
 
 /*
  * Local implementation of vdprintf so we can use %p and other non-standard formats.
  */
 extern
+DMALLOC_API
 void	loc_vdprintf(int fd, const char *format, va_list args);
 
 /*<<<<<<<<<<   This is end of the auto-generated output from fillproto. */

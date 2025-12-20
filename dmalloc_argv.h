@@ -182,22 +182,27 @@ typedef struct {
 
 /* This is a processed version of argv[0], pre-path removed: /bin/ls -> ls */
 extern
+DMALLOC_API
 const char	*argv_program;
 
 /* A global value of argv from main after argv_process has been called */
 extern
+DMALLOC_API
 char	**argv_argv;
 
 /* A global value of argc from main after argv_process has been called */
 extern
+DMALLOC_API
 int	argv_argc;
 
 /* This should be set externally to provide general program help to user */
 extern
+DMALLOC_API
 char	*argv_help_string;
 
 /* This should be set externally to provide version information to the user */
 extern
+DMALLOC_API
 char	*argv_version_string;
 
 /*
@@ -205,6 +210,7 @@ char	*argv_version_string;
  * false to return error codes instead.
  */
 extern
+DMALLOC_API
 int 	argv_interactive;
 
 /*
@@ -212,6 +218,7 @@ int 	argv_interactive;
  * not dump any error messages.  Default is stderr.
  */
 extern
+DMALLOC_API
 FILE 	*argv_error_stream;
 
 /*
@@ -219,6 +226,7 @@ FILE 	*argv_error_stream;
  * we are in interactive mode.
  */
 extern
+DMALLOC_API
 int	argv_error_code;
 
 /*
@@ -227,6 +235,7 @@ int	argv_error_code;
  * you to specifically assign a value to an argument.
  */
 extern
+DMALLOC_API
 int	argv_close_enable_b;
 
 /*
@@ -237,6 +246,7 @@ int	argv_close_enable_b;
  * behavior.
  */
 extern
+DMALLOC_API
 int	argv_last_toggle_b;
 
 /*
@@ -245,6 +255,7 @@ int	argv_last_toggle_b;
  * if you use an argument twice.
  */
 extern
+DMALLOC_API
 int	argv_multi_accept_b;
 
 /*
@@ -253,6 +264,7 @@ int	argv_multi_accept_b;
  * specified by the user.  Default is ARGV_USAGE_LONG.
  */
 extern
+DMALLOC_API
 int	argv_usage_type;
 
 /*
@@ -262,6 +274,7 @@ int	argv_usage_type;
  * Default is ARGV_USAGE_SEE.
  */
 extern
+DMALLOC_API
 int	argv_error_type;
 
 /*
@@ -278,6 +291,7 @@ int	argv_error_type;
  * want this behavior, you should use argv_process_no_env.
  */
 extern
+DMALLOC_API
 int	argv_process_env_b;
 
 /*
@@ -288,6 +302,7 @@ int	argv_process_env_b;
  * argv_process_env_b for more information.
  */
 extern
+DMALLOC_API
 int	argv_env_after_b;
 
 /*
@@ -308,6 +323,7 @@ int	argv_env_after_b;
  * argv - Array of character pointers terminated by 0L.
  */
 extern
+DMALLOC_API
 int	argv_process_no_env(argv_t *args, const int arg_n, char **argv);
 
 /*
@@ -329,6 +345,7 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv);
  * argv - Array of character pointer arguments terminated by a 0L.
  */
 extern
+DMALLOC_API
 int	argv_process(argv_t *args, const int argc, char **argv);
 
 /*
@@ -352,6 +369,7 @@ int	argv_process(argv_t *args, const int argc, char **argv);
  * (the user's default either long or short).
  */
 extern
+DMALLOC_API
 int	argv_usage(const argv_t *args, const int which);
 
 /*
@@ -368,6 +386,7 @@ int	argv_usage(const argv_t *args, const int which);
  * short_arg - Short argument to see if it was used.
  */
 extern
+DMALLOC_API
 int	argv_was_used(const argv_t *args, const char short_arg);
 
 /*
@@ -384,6 +403,7 @@ int	argv_was_used(const argv_t *args, const char short_arg);
  * long_arg - Long argument to see if it was used.
  */
 extern
+DMALLOC_API
 int	argv_long_was_used(const argv_t *args, const char *long_arg);
 
 /*
@@ -399,6 +419,7 @@ int	argv_long_was_used(const argv_t *args, const char *long_arg);
  * argv_entry_p - Pointer to an entry in a argv_t list.
  */
 extern
+DMALLOC_API
 int	argv_entry_was_used(const argv_t *argv_entry_p);
 
 /*
@@ -413,6 +434,7 @@ int	argv_entry_was_used(const argv_t *argv_entry_p);
  * args - Argument array we are cleaning up.
  */
 extern
+DMALLOC_API
 void	argv_cleanup(const argv_t *args);
 
 /*
@@ -433,6 +455,7 @@ void	argv_cleanup(const argv_t *args);
  * buf_size - Size of the buffer.
  */
 extern
+DMALLOC_API
 int	argv_copy_args(char *buf, const int buf_size);
 
 /*
@@ -452,6 +475,7 @@ int	argv_copy_args(char *buf, const int buf_size);
  * buf_size - Size of the buffer.
  */
 extern
+DMALLOC_API
 int	argv_value_string(const argv_t *argv_entry_p, char *buf,
 			  const int buf_size);
 
@@ -473,6 +497,7 @@ int	argv_value_string(const argv_t *argv_entry_p, char *buf,
  * NULL, will be pointed to a description of the type.
  */
 extern
+DMALLOC_API
 const char	*argv_type_info(const unsigned int type, unsigned int *size_p,
 				const char **desc_p);
 

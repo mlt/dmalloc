@@ -32,6 +32,12 @@
  * and it will take care of seeding, etc.
  */
 
+/* one off so we don't pull the whole header in */
+#ifdef DLL_EXPORT
+  #define DMALLOC_API __declspec(dllexport)
+#else
+  #define DMALLOC_API
+#endif
 #include "dmalloc_rand.h"
 
 #define MAGIC_A			16807		/* magic number */

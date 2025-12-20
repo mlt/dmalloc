@@ -34,6 +34,7 @@
  * seed -> Value to seed the algorithm with.
  */
 extern
+DMALLOC_API
 void	_dmalloc_srand(const long seed);
 
 /*
@@ -44,6 +45,7 @@ void	_dmalloc_srand(const long seed);
  * Returns a random number.
  */
 extern
+DMALLOC_API
 long	_dmalloc_rand(void);
 
 /*<<<<<<<<<<   This is end of the auto-generated output from fillproto. */
