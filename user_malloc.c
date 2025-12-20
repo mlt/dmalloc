@@ -989,6 +989,7 @@ char	*dmalloc_strndup(const char *file, const int line,
 
 /*************************** external memory calls ***************************/
 
+#if !defined(_MSC_VER)
 /*
  * DMALLOC_PNT malloc
  *
@@ -1058,6 +1059,7 @@ DMALLOC_PNT	realloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size)
   return dmalloc_realloc(file, DMALLOC_DEFAULT_LINE, old_pnt, new_size,
 			 DMALLOC_FUNC_REALLOC, 0 /* no xalloc messages */);
 }
+#endif /* !defined(_MSC_VER) */
 
 /*
  * DMALLOC_PNT recalloc
@@ -1230,6 +1232,7 @@ char	*strndup(const char *string, const DMALLOC_SIZE max_len)
 }
 #endif /* ifndef DMALLOC_STRNDUP_MACRO */
 
+#if !defined(_MSC_VER)
 /*
  * DMALLOC_FREE_RET free
  *
@@ -1260,6 +1263,7 @@ DMALLOC_FREE_RET	free(DMALLOC_PNT pnt)
   return ret;
 #endif
 }
+#endif /* !defined(_MSC_VER) */
 
 /*
  * DMALLOC_FREE_RET cfree
