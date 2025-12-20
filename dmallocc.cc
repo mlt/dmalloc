@@ -85,3 +85,22 @@ operator delete[](void *pnt)
   GET_RET_ADDR(file);
   dmalloc_free(file, 0, pnt, DMALLOC_FUNC_DELETE_ARRAY);
 }
+
+/*
+ * Sized dealloactions.
+ */
+void
+operator delete(void *pnt, size_t size)
+{
+  char	*file;
+  GET_RET_ADDR(file);
+  dmalloc_free(file, 0, pnt, DMALLOC_FUNC_DELETE_SIZED);
+}
+
+void
+operator delete[](void *pnt, size_t size)
+{
+  char	*file;
+  GET_RET_ADDR(file);
+  dmalloc_free(file, 0, pnt, DMALLOC_FUNC_DELETE_ARRAY_SIZED);
+}
