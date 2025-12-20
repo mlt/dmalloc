@@ -280,6 +280,6 @@ void	*_dmalloc_heap_alloc(const unsigned int size)
   if (diff_size == 0) {
     return heap_new;
   } else {
-    return heap_new + diff_size;
+    return (char *)heap_new + diff_size;
   }
 }
