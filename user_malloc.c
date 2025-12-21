@@ -316,7 +316,7 @@ static	void	process_environ(const char *option_str)
 /*
  * signal catcher
  */
-static	RETSIGTYPE	signal_handler(const int sig)
+static	void	signal_handler(const int sig)
 {
   dmalloc_message("caught signal %d", sig);
   /* if we are already inside malloc then do the shutdown later */

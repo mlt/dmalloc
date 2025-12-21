@@ -456,7 +456,6 @@ if test "$ac_cv_abort_safe" = "yes"; then
 	]))
 fi
 
-AC_TYPE_SIGNAL
 AC_CHECK_HEADER([signal.h],
 		[AC_DEFINE(HAVE_SIGNAL_H,1) AC_SUBST([HAVE_SIGNAL_H],1)],
 		[AC_DEFINE(HAVE_SIGNAL_H,0) AC_SUBST([HAVE_SIGNAL_H],0)])
