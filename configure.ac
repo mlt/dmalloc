@@ -165,7 +165,6 @@ fi
 #
 # autoheader templates
 #
-AH_TEMPLATE([ABORT_OKAY],                 [Define to 1 if abort is safe to call])
 AH_TEMPLATE([ALLOCATION_ALIGNMENT],       [Byte alignment for allocations])
 AH_TEMPLATE([CONSTRUCTOR_WORKS],          [Define to 1 if constructor attribute works])
 AH_TEMPLATE([DESTRUCTOR_WORKS],           [Define to 1 if destructor attribute works])
@@ -406,7 +405,7 @@ AC_MSG_RESULT([$ac_cv_pnt_arith_type])
 # check the safety of the abort function
 #
 AC_CHECK_FUNCS(abort)
-AC_MSG_CHECKING([abort safe])
+AC_CACHE_CHECK([abort safe], [ac_cv_abort_safe], [
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 static int main_b = 0;
 static char heap_mem[102400], *heap_p = heap_mem;
@@ -441,11 +440,21 @@ int main() { main_b = 1; abort(); return 1; }
 ]])],
 # NOTE: this is reversed because abort core dumps and doesn't exit with
 # 0 which means that it should fail
-[ AC_DEFINE(ABORT_OKAY, 0) AC_MSG_RESULT([no]) ],
+[ ac_cv_abort_safe=no ],
 # if it succeeds then something called free on the way out
-[ AC_DEFINE(ABORT_OKAY, 1) AC_MSG_RESULT([yes]) ],
-[ AC_DEFINE(ABORT_OKAY, 0) AC_MSG_RESULT([no]) ]
+[ ac_cv_abort_safe=yes ],
+[ ac_cv_abort_safe=no ]
 )
+])
+if test "$ac_cv_abort_safe" = "yes"; then
+	AC_DEFINE([ABORT_OKAY], [1], m4_normalize([
+		This checks to see if the abort routine does extensive cleaning up
+		before halting a program.  If so then it may call malloc functions
+		making the library go recursive.  If abort is set to not okay then
+		you should tune the KILL_PROCESS and SIGNAL_INCLUDE options in
+		settings.h if you want the library to be able to dump core.
+	]))
+fi
 
 AC_TYPE_SIGNAL
 AC_CHECK_HEADER([signal.h],
