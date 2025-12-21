@@ -105,13 +105,19 @@
 
 /* for x86-64 machines with GCC */
 /* this doesn't seem to work for: __x86_64__ && __GNUC__ > 1 */
-#if 0
+#if __x86_64__ && __GNUC__ > 1
+#if HAVE_FRAME_POINTER
 
 #define GET_RET_ADDR(file)	asm("movq 8(%%rbp),%%rax ; movq %%rax,%0" : \
 				    "=g" (file) : \
 				    /* no inputs */  : \
 				    "rax")
 
+#else /* does not require -fno-omit-frame-pointer */
+
+#define GET_RET_ADDR(file) do { file = (char *)__builtin_return_address(0); } while (0)
+
+#endif /* HAVE_FRAME_POINTER */
 #endif /* __x86_64__ */
 
 /*************************************/

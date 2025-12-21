@@ -615,8 +615,11 @@ AM_CONDITIONAL([MSVC], [test "x$ac_cv_have_decl__MSC_VER" = "xyes"])
 #
 # check if the return.h macros work
 #
-AC_MSG_CHECKING([return.h macros work])
-AC_RUN_IFELSE([AC_LANG_SOURCE([
+# remember -fno-omit-frame-pointer
+AC_CACHE_CHECK([return.h macros work], [ac_cv_return_macros_work], [
+XX_OLD_CPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS -I$srcdir"
+AC_RUN_IFELSE([AC_LANG_PROGRAM([
 
 #define __CONF_H__
 #define USE_RETURN_MACROS 1
@@ -628,18 +631,25 @@ static void foo (void)
 {
   char	*ret_addr;
   GET_RET_ADDR(ret_addr);
-}
-
-int main()
-{
-  foo();
-  return 0;
-}
-])],
-[ AC_DEFINE(RETURN_MACROS_WORK, 1) AC_MSG_RESULT([yes]) ],
-[ AC_DEFINE(RETURN_MACROS_WORK, 0) AC_MSG_RESULT([no]) ],
-[ AC_DEFINE(RETURN_MACROS_WORK, 0) AC_MSG_RESULT([no]) ]
-)
+}], [ foo() ])], [
+AS_CASE([$host_cpu],
+    [x86_64], [ AS_IF(
+        [ $OBJDUMP --disassemble=main ./conftest$EXEEXT | grep -B1 "mov.*%rsp,.*%rbp" | grep "push   %rbp" > /dev/null ],
+        [ ac_cv_return_macros_work=yes ; ac_cv_have_frame_pointer=yes ],
+        [ ac_cv_return_macros_work=no ; ac_cv_have_frame_pointer=no ;
+            MSG_WARN([The return.h macros using asm do not work correctly without frame pointers.])
+        ]) ],
+    [*], [ ac_cv_return_macros_work=yes ; ac_cv_have_frame_pointer=no ] )],
+[ ac_cv_return_macros_work=no ; ac_cv_have_frame_pointer=no ],
+[ ac_cv_return_macros_work=no ; ac_cv_have_frame_pointer=no ])
+CPPFLAGS=$XX_OLD_CPPFLAGS
+])
+if test "x$ac_cv_have_frame_pointer" = "xyes" ; then
+	AC_DEFINE([HAVE_FRAME_POINTER], [1], [Define if frame pointer is available, i.e. -fno-omit-frame-pointer is used.]) 
+fi
+if test "$ac_cv_return_macros_work" = "yes" ; then
+	AC_DEFINE([RETURN_MACROS_WORK], [1], [This checks to see if we can include return.h and use the assembly macros there to call the callers address for logging.  If you do not want this behavior, then set the USE_RETURN_MACROS to 0 in the settings.h file.])
+fi
 
 ##############################################################################
 
