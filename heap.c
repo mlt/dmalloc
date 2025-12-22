@@ -30,6 +30,10 @@
 #if HAVE_SYS_MMAN_H
 #  include <sys/mman.h>				/* for mmap stuff */
 #endif
+#ifdef _WIN32
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#endif /* ifdef _WIN32 */
 
 #define DMALLOC_DISABLE
 
@@ -95,6 +99,13 @@ static	void	*heap_extend(const int incr)
 #else
 #if HAVE_SBRK
   ret = sbrk(incr);
+#else
+#if defined(_WIN32)
+  ret = VirtualAlloc(NULL, incr, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  if (!ret) {
+    ret = SBRK_ERROR;
+  }
+#endif /* if defined(_WIN32) */
 #endif /* if HAVE_SBRK */
 #endif /* if not HAVE_MMAP && USE_MMAP */
 #endif /* if not INTERNAL_MEMORY_SPACE */
@@ -150,7 +161,31 @@ static	void	heap_release(void *addr, const int size)
 		    addr, size);
   }
 #else
+#ifdef _WIN32
+#if 0
+  MEMORY_BASIC_INFORMATION mbi;
+  VirtualFree(addr, size, MEM_DECOMMIT);
+  if(VirtualQuery(addr, &mbi, sizeof(mbi))) {
+    if (mbi.State != MEM_RESERVE || mbi.RegionSize < size) {
+      dmalloc_message("VirtualQuery returned bad state for heap memory %p", addr);
+    } else {
+      dmalloc_message("VirtualQuery reserved size %d for heap memory %p, size %d", mbi.RegionSize, addr, size);
+    }
+  } else {
+    dmalloc_message("VirtualQuery failed for heap memory %p", addr);
+  }
+#endif
+  if(VirtualFree(addr, 0, MEM_RELEASE) != 0) {
+    if (BIT_IS_SET(_dmalloc_flags, DMALLOC_DEBUG_LOG_ADMIN)) {
+      dmalloc_message("releasing heap memory %p, size %d", addr, size);
+    }
+  } else {
+    dmalloc_message("VirtualFree failed to release heap memory %p, size %d",
+        addr, size);
+  }
+#else
   /* no-op */
+#endif /* ifdef _WIN32 */
 #endif /* if not HAVE_MMAP && USE_MMAP */
 #endif /* if not INTERNAL_MEMORY_SPACE */
 }
