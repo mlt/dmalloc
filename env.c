@@ -164,7 +164,7 @@ void	_dmalloc_start_break(const char *start_all, char **start_file_p,
 {
   char	*start_p;
   
-  start_p = strchr(start_all, ':');
+  start_p = strrchr(start_all, ':');
   if (start_p != NULL) {
     (void)strncpy(start_file, start_all, sizeof(start_file));
     start_file[sizeof(start_file) - 1] = '\0';
