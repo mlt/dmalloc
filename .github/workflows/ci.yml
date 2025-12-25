@@ -1,0 +1,120 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu
+            os: ubuntu-latest
+            opts: ""
+          - name: ubuntu-no-fp
+            os: ubuntu-latest
+            opts: CFLAGS=-fno-omit-frame-pointer
+          - name: macos-arm
+            os: macos-latest
+            opts: ""
+          - name: mingw32
+            os: windows-latest
+            shell: msys2 {0}
+            msystem: MINGW32
+            toolchain: mingw-w64-i686-toolchain
+            opts: --host=i686-w64-mingw32
+          - name: mingw64
+            os: windows-latest
+            shell: msys2 {0}
+            msystem: UCRT64
+            toolchain: mingw-w64-ucrt-x86_64-toolchain
+            opts: --host=x86_64-w64-mingw32
+          - name: msvc-x86
+            os: windows-latest
+            shell: msys2 {0}
+            msystem: MSYS
+            msvc: true
+            msvc_arch: x86
+            cc: cl -nologo
+            ld: link
+            ar: lib
+            cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Oy-
+            opts: --build=i686-pc-windows -C ac_cv_prog_cc_g=no
+          - name: msvc-x64
+            os: windows-latest
+            shell: msys2 {0}
+            msystem: MSYS
+            msvc: true
+            msvc_arch: x64
+            cc: cl -nologo
+            ld: link
+            ar: lib
+            cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Oy-
+            opts: --build=x86_64-pc-windows -C ac_cv_prog_cc_g=no
+
+    env:
+      CC: ${{ matrix.cc || '' }}
+      LD: ${{ matrix.ld || '' }}
+      AR: ${{ matrix.ar || '' }}
+      CPPFLAGS: ${{ matrix.cppflags || '' }}
+      MSYS_COMMON: base-devel autoconf automake-wrapper libtool make
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps (apt)
+        if: runner.os == 'Linux'
+        run: >-
+          sudo apt-get install -qq -y -o=Dpkg::Use-Pty=0
+          build-essential
+          autoconf
+          automake
+          libtool
+          pkg-config
+
+      - name: Install build deps (brew)
+        if: runner.os == 'macOS'
+        run: >-
+          env HOMEBREW_NO_AUTO_UPDATE=1 brew install
+          autoconf
+          automake
+          libtool
+          pkg-config
+
+      - name: MSVC environment
+        if: matrix.msvc == true
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+
+      - name: MSYS2
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: false
+          install: ${{ env.MSYS_COMMON }} ${{ matrix.toolchain || '' }}
+
+      - name: Configure
+        shell: ${{ matrix.shell || 'bash' }}
+        run: ./configure -C ${{ matrix.opts }}
+
+      - name: Build
+        shell: ${{ matrix.shell || 'bash' }}
+        run: make -j 2
+
+      - name: Test
+        shell: ${{ matrix.shell || 'bash' }}
+        run: make check
+
+      - name: Install
+        shell: ${{ matrix.shell || 'bash' }}
+        run: make install DESTDIR=${{ github.workspace }}/stage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmalloc-${{ matrix.name }}
+          path: ${{ github.workspace }}/stage
