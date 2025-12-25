@@ -1,0 +1,157 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu
+            os: ubuntu-latest
+            cppflags: -fno-omit-frame-pointer
+            opts: --enable-threads
+          - name: macos-arm
+            os: macos-latest
+          - name: msys
+            os: windows-latest
+            msystem: MSYS
+            toolchain: msys2-devel
+          - name: mingw32
+            os: windows-latest
+            msystem: MINGW32
+            toolchain: mingw-w64-i686-toolchain
+          - name: mingw64
+            os: windows-latest
+            msystem: UCRT64
+            toolchain: mingw-w64-ucrt-x86_64-toolchain
+          - name: msvc-x86
+            os: windows-latest
+            msystem: UCRT64
+            msvc: true
+            msvc_arch: x86
+            cc: cl -nologo
+            cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Zi -FS -W4
+            opts: ac_cv_prog_cc_g=no --disable-shared
+          - name: msvc-x64
+            os: windows-latest
+            msystem: UCRT64
+            msvc: true
+            msvc_arch: x64
+            cc: cl -nologo
+            cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Zi -FS -W4
+            opts: ac_cv_prog_cc_g=no
+
+    env:
+      CC: ${{ matrix.cc || '' }}
+      CXX: ${{ matrix.cc || '' }}
+      CPPFLAGS: ${{ matrix.cppflags || '' }}
+      MSYSTEM: ${{ matrix.msystem || '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build deps (apt)
+        if: runner.os == 'Linux'
+        run: >-
+          sudo apt-get install -qq -y -o=Dpkg::Use-Pty=0
+          build-essential
+          autoconf
+          automake
+          libtool
+          pkg-config
+
+      - name: Install build deps (brew)
+        if: runner.os == 'macOS'
+        run: >-
+          env HOMEBREW_NO_AUTO_UPDATE=1 brew install
+          autoconf
+          automake
+          libtool
+
+      - name: MSVC environment
+        if: matrix.msvc
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
+
+      - name: Set PATH on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cat $env:GITHUB_PATH
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\msys64\${{ matrix.msystem }}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: 🪟 Install dependencies on Windows
+        if: runner.os == 'Windows'
+        run: pacman --noconfirm -S autotools ${{ matrix.toolchain || '' }}
+
+      - name: Reconf
+        run: autoreconf -i --warnings=all
+
+      - name: Configure
+        run: ./configure -C ${{ matrix.opts || '' }}
+
+      - name: Build
+        run: make -j 2
+
+      - name: Test
+        run: make check || ./dmalloc-t -v -t 100 -m 1024 -p 1024
+
+      - name: Install
+        run: make install DESTDIR=$PWD/stage
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmalloc-${{ matrix.name }}
+          path: stage
+
+      - name: Upload config.log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmalloc-${{ matrix.name }}-config-log
+          path: |
+            config.log
+            test-suite.log
+
+  extra:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: omnios
+            version: r151056
+            inst_deps: pfexec pkg install build-essential developer/build/libtool
+          - name: haiku
+            version: r1beta5
+            inst_deps: pkgman install -y libtool
+            opts: ac_cv_abort_safe=yes --enable-threads
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test on ${{ matrix.name}}
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: ${{ matrix.name }}
+          version: ${{ matrix.version }}
+          memory: 2G
+          sync_files: runner-to-vm
+          run: |
+            ${{ matrix.inst_deps || '' }}
+            autoreconf -i --warnings=all
+            ./configure -C ${{ matrix.opts || '' }}
+            make -j 2
+            make check || ./dmalloc-t -v -t 100 -m 1024 -p 1024
