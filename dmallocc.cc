@@ -68,7 +68,7 @@ operator new[](size_t size)
  * An overload function for the C++ delete.
  */
 void
-operator delete(void *pnt)
+operator delete(void *pnt) noexcept
 {
   char	*file;
   GET_RET_ADDR(file);
@@ -79,7 +79,7 @@ operator delete(void *pnt)
  * An overload function for the C++ delete[].  Thanks to Jens Krinke.
  */
 void
-operator delete[](void *pnt)
+operator delete[](void *pnt) noexcept
 {
   char	*file;
   GET_RET_ADDR(file);
@@ -90,7 +90,7 @@ operator delete[](void *pnt)
  * Sized dealloactions.
  */
 void
-operator delete(void *pnt, size_t size)
+operator delete(void *pnt, size_t size) noexcept
 {
   char	*file;
   GET_RET_ADDR(file);
@@ -98,7 +98,7 @@ operator delete(void *pnt, size_t size)
 }
 
 void
-operator delete[](void *pnt, size_t size)
+operator delete[](void *pnt, size_t size) noexcept
 {
   char	*file;
   GET_RET_ADDR(file);
