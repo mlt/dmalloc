@@ -93,7 +93,11 @@ static	void	*heap_extend(const int incr)
 #if MAP_ANON
   /* if we have and can use mmap, then do so */
   ret = mmap(0L, incr, PROT_READ | PROT_WRITE | PROT_EXEC,
-	     MAP_PRIVATE | MAP_ANON, -1 /* no fd */, 0 /* no offset */);
+	     MAP_PRIVATE | MAP_ANON
+#if defined(MAP_JIT)
+       | MAP_JIT
+#endif
+       , -1 /* no fd */, 0 /* no offset */);
 #else
 #endif
   if (ret == MAP_FAILED) {
