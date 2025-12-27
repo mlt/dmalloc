@@ -311,7 +311,11 @@ int main() {
   char *dest, *src, *src_p, *dest_p;
   src = "0123456789";
   dest = (char *)mmap(0L, 10, PROT_READ | PROT_WRITE | PROT_EXEC,
-	              MAP_PRIVATE | MAP_ANON, -1 /* no fd */,
+	              MAP_PRIVATE | MAP_ANON
+#if defined(MAP_JIT)
+                      | MAP_JIT
+#endif
+                  , -1 /* no fd */,
 		      0 /* no offset */);
   src_p = src; dest_p = dest;
   while (src_p < src + 10) { *dest_p++ = *src_p++; }
