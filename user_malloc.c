@@ -662,6 +662,12 @@ void	dmalloc_shutdown(void)
   unlock_thread();
 #endif
   
+#if HAVE_DETOURS
+  extern void resolve_symbols();
+  if (dmalloc_logpath)
+    resolve_symbols();
+#endif
+
   /* NOTE: do not set enabled_b to false here */
 }
 

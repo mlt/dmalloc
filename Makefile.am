@@ -68,6 +68,18 @@ libdmalloc_la_CPPFLAGS = -MD -Zi -Fddmalloc.dll.pdb
 ## dumpbin.exe -HEADERS .libs/dmalloc.dll | grep RSDS -A 1
 #export _LINK_=-DEBUG -PDB:dmalloc.dll.pdb
 libdmalloc_la_LDFLAGS += -Wl,-Xlinker,-DEBUG,-Xlinker,-PDB:dmalloc.dll.pdb
+if HAVE_DETOURS
+libdmalloc_la_SOURCES += dmalloc_detours.c
+libdmalloc_la_CPPFLAGS += -I@VCPKG_ROOT_DIR@/include
+libdmalloc_la_LDFLAGS += -Wl,@VCPKG_ROOT_DIR@/lib/detours.lib
+libdmalloc_la_LIBADD = -lDbghelp
+pkglibexec_PROGRAMS += dmalloc_win32_t
+dmalloc_win32_t_SOURCES = dmalloc_win32_t.c
+dmalloc_win32_t_LDADD = libdmalloc.la
+## This has to be -MD
+## Also consider -DYNAMICBASE:NO
+dmalloc_win32_t_CPPFLAGS = -MD -Zi -Fddmalloc_win32_t.pdb
+endif # HAVE_DETOURS
 endif # MSVC
 dmalloc_LDADD = libdmalloc.la
 dmalloc_t_LDADD = libdmalloc.la

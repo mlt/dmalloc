@@ -81,6 +81,21 @@ AC_ARG_ENABLE(threads,
     [ enable_threads=no ]
 )
 
+vcpkg_detours_default="$VCPKG_ROOT/installed/${VCPKG_DEFAULT_TRIPLET:-x64-windows}"
+
+AC_ARG_WITH([detours],
+    [ AS_HELP_STRING([--with-detours@<:@=DIR@:>@],
+        [build with Microsoft Detours support (MSVC only) @<:@default=VCPKG_PATH@:>@])],
+    [
+        AS_CASE(["$withval"],
+            [yes], [ with_detours=$vcpkg_detours_default ],
+            [no],  [ with_detours=no ],
+            [*],   [ with_detours=$withval ]
+        )
+    ],
+    [ with_detours=$vcpkg_detours_default ]
+)
+
 ##############################################################################
 MSG_NOTICE([build utilities])
 
@@ -615,6 +630,20 @@ int main() { return 1; }
   AC_MSG_RESULT([yes])
   destructor_works=yes ],
 )
+
+##############################################################################
+XX_OLD_CPPFLAGS=$CPPFLAGS
+CPPFLAGS+=" -I$with_detours/include"
+AC_CHECK_HEADER([detours/detours.h], [
+	AC_DEFINE([HAVE_DETOURS], [1], [Define to 1 if Microsoft Detours is available])
+	AC_SUBST([VCPKG_ROOT_DIR], [${with_detours//\\/\/}])
+], [], [dnl needed to define architecture macros like _AMD64_
+  #define WIN32_LEAN_AND_MEAN
+  #include <windows.h>
+])
+CPPFLAGS=$XX_OLD_CPPFLAGS
+dnl Detours uses new/delete internally. Without dmallocc.cc, we will go into recursion.
+AM_CONDITIONAL([HAVE_DETOURS], [test "x$enable_cxx" = "xyes" && test "x$ac_cv_header_detours_detours_h" = "xyes"])
 
 dnl ac_cv_have_decl__MSC_VER
 AC_CHECK_DECL([_MSC_VER], [
