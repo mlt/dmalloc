@@ -1,70 +1,123 @@
-Debug Malloc Library
-====================
+Debug Malloc Library (modified)
+===============================
+[![CI](https://github.com/mlt/dmalloc/actions/workflows/ci.yml/badge.svg)](https://github.com/mlt/dmalloc/actions/workflows/ci.yml)
 
-Version 5.6.5 -- 12/28/2020
+This is a specialized version of dmalloc. Original code can be found at
+https://dmalloc.com/ .
 
-[![CircleCI](https://circleci.com/gh/j256/dmalloc.svg?style=svg)](https://circleci.com/gh/j256/dmalloc)
+About this fork
+---------------
+This is an effort to enhance dmalloc experience on Windows with Microsoft
+compiler. Besides the standard practice of including `dmalloc.h` and linking
+against the library, the shared library build leverages [Microsoft Detours
+library](https://github.com/microsoft/Detours/) to hook memory allocation
+functions. Along with withdll.exe, this gives an experience very close to that
+of using dmalloc with LD_PRELOAD and unmodified executable.
 
-The debug memory allocation or "dmalloc" library has been designed as a drop in replacement for the system's
-`malloc`, `realloc`, `calloc`, `free` and other memory management routines while providing powerful debugging
-facilities configurable at runtime.  These facilities include such things as memory-leak tracking, fence-post
-write detection, file/line number reporting, and general logging of statistics.
+### Synopsis
+Consider the following `test.c` code below. Compile it with `cl -MD -Zi test.c`.
+Note that **both flags are a must**: `-MD` makes use of DLL runtime that can be
+hooked with Detours and `-Zi` generates PDB program database with symbols to look
+up from addresses using DbgHelp.
 
-The library is reasonably portable having been run successfully on at least the following operating systems:
-AIX, DGUX, Free/Net/OpenBSD, GNU/Hurd, HPUX, Irix, Linux, OSX, NeXT, OSF/DUX, SCO, Solaris, Sunos, Ultrix,
-Unixware, MS Windows, and Unicos on a Cray T3E.  It also provides support for the debugging of threaded
-programs.
+```c
+#include <stdlib.h>
+int main() {
+  free(NULL);
+  *(int *)NULL = 0;
+  return 0;
+}
+```
 
-The package includes the library, configuration scripts, debug utility application, test program, and
-documentation.  Online documentation as well as the full source is available at the [dmalloc home
-page](https://dmalloc.com/).
+Set dmalloc tokens `dmalloc -l logfile -c -p error-free-null -p catch-signals -b`  
+with `export DMALLOC_OPTIONS=debug=0x10020000,log=logfile` if you are using
+MSYS2 bash. Finally, you can run `withdll.exe -d:dmalloc_detours.dll test.exe`. You
+should see `logfile.sym` file:
 
-Enjoy.  Gray Watson
+```log
+1768197062: 11: Dmalloc version '5.6.5' from 'https://dmalloc.com/'
+1768197062: 11: flags = 0x10020000, logfile 'logfile'
+1768197062: 11: interval = 0, addr = 0x0, seen # = 0, limit = 0
+1768197062: 11: starting time = 1768197062
+1768197062: 11: process pid = 8500
+1768197062: 11: WARNING: tried to free(0) from 'D:\a\dmalloc\dmalloc\.libs\test.c:4'
+1768197062: 11:   error details: invalid 0L pointer
+1768197062: 11:   from 'D:\a\dmalloc\dmalloc\.libs\test.c:4' prev access 'unknown'
+1768197062: 11: ERROR: free: pointer is null (err 20)
+1768197062: 11: caught unhandled exception 0xc0000005 from 'D:\a\dmalloc\dmalloc\.libs\test.c:4'
+1768197062: 21: ending time = 1768197062, elapsed since start = 0:00:00
+```
 
-## Documentation
+Note that both errors point to the same line number. That is because return
+address is the next instructions whereas exception information has the address
+of the faulty instruction.
 
-See the INSTALL.txt file for building, installation, and quick-start notes.
+### Internals
+This is achieved in two steps:
+1) GET_RET_ADDR macro uses
+   [_AddressOfReturnAddress()](https://learn.microsoft.com/en-us/cpp/intrinsics/addressofreturnaddress)
+   cl compiler intrinsic to get the return address without relying on frame
+   pointers as commonly found on other platforms.
+2) [The debug help library,
+   DbgHelp](https://learn.microsoft.com/en-us/windows/win32/debug/debug-help-library),
+   is used at exit to re-parse logfile and replace addresses with file name and
+   line number information.
 
-Examine the [html
-documentation](https://htmlpreview.github.io/?https://raw.githubusercontent.com/j256/dmalloc/master/dmalloc.html) for
-dmalloc.  The source of all documation is the dmalloc.texi texinfo file which also can generate PDF hardcopy output with
-the help of the texinfo.tex file.  You can download the full documentation package or read it [online from the
-repository](https://dmalloc.com/).
+### Limitations
+- Attempt to use DbgHelp on-the-go makes dmalloc go recursive:( TODOs:
+  - It might worth a try to use noinst_LIBRARY with -MT flag while linking with
+    DbgHelp.
+  - or patch withdll to set `DEBUG_PROCESS` _dwCreationFlags_ while calling
+    `DetourCreateProcessWithDllsA` to become a debugger for said process and use
+    DbgHelp in unaltered environment. But this way we will lose general
+    debugging capability.
+- You would want to have PDB program database with symbols (`-Zi` flag for
+  compiler and `-DEBUG` for link.exe, or, alternatively,
+  `program_LDFLAGS=-Wl,-Xlinker,-DEBUG,-Xlinker,-PDB:your_exe.pdb` if you are
+  using autotools) besides using `MD` flag
+- You may want to consider disabling address randomization with either
+  [`-DYNAMICBASE:NO` link.exe
+  option](https://learn.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization)
+  or corresponding [EDITBIN
+  option](https://learn.microsoft.com/en-us/cpp/build/reference/dynamicbase) if
+  for some reason you prefer to use actual address instead of source file line
+  numbers.
 
-## Quick Getting Started
+How to build
+------------
+You will need Visual Studio, vcpkg, and MSYS2 installed. I prefer UCRT64
+environment for MSYS2. Install Detours with `vcpkg install detours` and make
+sure you have `VCPKG_ROOT` environment variable defined as it is used in
+`configure.ac`.
 
-This section should give you an idea on how to get going.  See the more complete [getting started
-documentation](https://dmalloc.com/docs/getting-started) for more details.
+Have a bash script `conf.sh` akin to
+```sh
+#!/bin/sh
 
-  1. Download the latest version of the library available from https://dmalloc.com/.
+export WindowsSdkDir="C:\\Program Files (x86)\\Windows Kits\\10\\"
+export WindowsSDKLibVersion="10.0.26100.0\\"
+VCROOT="C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207"
+SDKINC="$WindowsSdkDir\\include\\$WindowsSDKLibVersion"
+SDKLIB="$WindowsSdkDir\\lib\\$WindowsSDKLibVersion"
+export INCLUDE="$VCROOT\\include;$SDKINC\\ucrt;$SDKINC\\um;$SDKINC\\shared"
+export Platform=x64
+export LIB="$VCROOT\\lib\\$Platform;$SDKLIB\\ucrt\\$Platform;$SDKLIB\\um\\$Platform"
+if ! command -v cl > /dev/null ; then
+  echo "Adding cl and mt to path"
+  export PATH="$VCROOT\\bin\\Host$Platform\\$Platform:$WindowsSdkDir\\bin\\$WindowsSDKLibVersion\\$Platform:$PATH"
+fi
+export CC="cl -nologo"
+export CXX=$CC
+export CPPFLAGS="-we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Zi -W4 -we4996 -we4311 -we4022 -we4312 -we4365 -wd4018 -wd4245 -wd4389 -wd4100 -wd4127 -wd4152 -wd4210 -wd4459 -wd4232 -wd4267 -we4005"
 
-  2. Run `./configure` to configure the library.
+../configure -C ac_cv_prog_cc_g=no && make install DESTDIR=$PWD/stage
+```
+that sets PATH to cl compiler along with some necessary environment variables. Save it in a sub-directory to be a build root. Run it as `. ./conf.sh`. Note the standalone dot to souce in environment variables that you might use later. You might want to use `autoreconf -fi` the very first time if you are missing `configure`.
 
-  3. Run `make install` to install the library on your system.
-
-  4. Add an alias for the dmalloc utility.  The idea is to have the shell capture the dmalloc
-     program's output and adjust the environment.
-
-     Bash, ksh, and zsh users should add the following to their dot files:
-
-         function dmalloc { eval `command dmalloc -b $*`; }
-
-     Csh or tcsh users  should add the following to their dot files:
-
-         alias dmalloc 'eval `\dmalloc -C \!*`'
-
-  5. Link the dmalloc library into your program and the end of the library list.
-
-  8. Enable the debugging features by (for example) typing `dmalloc -l logfile -i 100 low`.
-     Use `dmalloc --usage` to see other arguments to the dmalloc program.
-
-  9. Run your program, examine the logfile, and use its information to help debug your program.
-
-## Thanks
-
-The initial idea of this library came from Doug Balog.  He and many other net folk contributed to the design,
-development, and continued maintenence of the library.  My thanks goes out to them all.
-
-# ChangeLog Release Notes
-
-See the [ChangeLog.txt file](ChangeLog.txt).
+### withdll
+For whatever reason [vcpkg port for detours](https://vcpkg.link/ports/detours) does not offer tools feature. So
+you'd need to open up x64 Native Tools command prompt and `cd
+%VCPKG_ROOT%\buildtrees\detours\x64-windows-rel\samples`. Then you'll need to cd
+into `syelog` and `withdll` and run `nmake` in both directories. Your final
+executable should be in
+`$%VCPKG_ROOT%$\buildtrees\detours\x64-windows-rel\bin.X64`.
