@@ -94,6 +94,7 @@
 #include "heap.h"
 #include "dmalloc_loc.h"
 #include "user_malloc.h"
+#include "user_malloc_loc.h"
 #include "return.h"
 
 #if LOCK_THREADS
@@ -989,7 +990,6 @@ char	*dmalloc_strndup(const char *file, const int line,
 
 /*************************** external memory calls ***************************/
 
-#if !defined(_MSC_VER)
 /*
  * DMALLOC_PNT malloc
  *
@@ -1003,7 +1003,7 @@ char	*dmalloc_strndup(const char *file, const int line,
  * size -> Number of bytes requested.
  */
 #undef malloc
-DMALLOC_PNT	malloc(DMALLOC_SIZE size)
+DMALLOC_PNT	WIN32_MANGLE(malloc)(DMALLOC_SIZE size)
 {
   char	*file;
   
@@ -1026,7 +1026,7 @@ DMALLOC_PNT	malloc(DMALLOC_SIZE size)
  * size -> The number of bytes in each element.
  */
 #undef calloc
-DMALLOC_PNT	calloc(DMALLOC_SIZE num_elements, DMALLOC_SIZE size)
+DMALLOC_PNT	WIN32_MANGLE(calloc)(DMALLOC_SIZE num_elements, DMALLOC_SIZE size)
 {
   DMALLOC_SIZE	len = num_elements * size;
   char		*file;
@@ -1051,7 +1051,7 @@ DMALLOC_PNT	calloc(DMALLOC_SIZE num_elements, DMALLOC_SIZE size)
  * new_size -> New number of bytes requested for the old pointer.
  */
 #undef realloc
-DMALLOC_PNT	realloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size)
+DMALLOC_PNT	WIN32_MANGLE(realloc)(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size)
 {
   char	*file;
   
@@ -1059,7 +1059,6 @@ DMALLOC_PNT	realloc(DMALLOC_PNT old_pnt, DMALLOC_SIZE new_size)
   return dmalloc_realloc(file, DMALLOC_DEFAULT_LINE, old_pnt, new_size,
 			 DMALLOC_FUNC_REALLOC, 0 /* no xalloc messages */);
 }
-#endif /* !defined(_MSC_VER) */
 
 /*
  * DMALLOC_PNT recalloc
@@ -1151,7 +1150,7 @@ DMALLOC_PNT	valloc(DMALLOC_SIZE size)
  * string -> String we are duplicating.
  */
 #undef strdup
-char	*strdup(const char *string)
+char	*WIN32_MANGLE(strdup)(const char *string)
 {
   int	len;
   char	*buf, *file;
@@ -1232,7 +1231,6 @@ char	*strndup(const char *string, const DMALLOC_SIZE max_len)
 }
 #endif /* ifndef DMALLOC_STRNDUP_MACRO */
 
-#if !defined(_MSC_VER)
 /*
  * DMALLOC_FREE_RET free
  *
@@ -1246,7 +1244,7 @@ char	*strndup(const char *string, const DMALLOC_SIZE max_len)
  * pnt -> Existing pointer we are freeing.
  */
 #undef free
-DMALLOC_FREE_RET	free(DMALLOC_PNT pnt)
+DMALLOC_FREE_RET	WIN32_MANGLE(free)(DMALLOC_PNT pnt)
 {
   char	*file;
 #ifdef DMALLOC_FREE_RET_INT
@@ -1263,7 +1261,6 @@ DMALLOC_FREE_RET	free(DMALLOC_PNT pnt)
   return ret;
 #endif
 }
-#endif /* !defined(_MSC_VER) */
 
 /*
  * DMALLOC_FREE_RET cfree
