@@ -50,6 +50,10 @@
 
 #if USE_RETURN_MACROS && RETURN_MACROS_WORK
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 /*************************************/
 
 /* for Sun SparcStations with GCC */
@@ -119,6 +123,14 @@
 
 #endif /* HAVE_FRAME_POINTER */
 #endif /* __x86_64__ */
+
+#ifdef _MSC_VER
+#define GET_RET_ADDR(file)                                                               \
+  do {                                                                                   \
+    char **a = (char **)_AddressOfReturnAddress();                                       \
+    file = a ? *a : NULL;                                                                \
+  } while (0)
+#endif /* _MSC_VER */
 
 /*************************************/
 
