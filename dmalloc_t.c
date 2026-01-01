@@ -36,6 +36,9 @@
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#ifdef _MSC_VER
+# include <process.h>				/* for getpid */
+#endif
 
 #include "append.h"
 #include "compat.h"				/* for loc_snprintf */

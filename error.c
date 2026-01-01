@@ -40,6 +40,10 @@
 # include <unistd.h>				/* for _exit */
 #endif
 
+#ifdef _MSC_VER
+# include <io.h>				/* for open, close, write */
+# include <process.h>				/* for getpid */
+#endif
 
 /* for KILL_PROCESS define */
 #if USE_ABORT == 0

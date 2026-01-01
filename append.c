@@ -39,6 +39,9 @@
 #if HAVE_UNISTD_H
 # include <unistd.h>				/* for write */
 #endif
+#ifdef _MSC_VER
+# include <io.h>				/* for open, close, write */
+#endif
 
 #include "dmalloc.h"
 

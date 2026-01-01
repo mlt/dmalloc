@@ -37,6 +37,9 @@
 #if HAVE_UNISTD_H
 # include <unistd.h>				/* for getpid */
 #endif
+#ifdef _MSC_VER
+# include <process.h>				/* for getpid */
+#endif
 
 #if HAVE_TIME
 # ifdef TIME_INCLUDE
