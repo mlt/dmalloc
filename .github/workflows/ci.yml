@@ -123,12 +123,13 @@ jobs:
           #include <stdlib.h>
           int main() {
             free(NULL);
+            *(int *)NULL = 0;
             return 0;
           }
           EOF
           cl -MD -Zi test.c
-          export DMALLOC_OPTIONS=debug=0x10000000,log=logfile
-          ./withdll -d:dmalloc.dll test.exe
+          export DMALLOC_OPTIONS=debug=0x10020000,log=logfile
+          ./withdll -d:dmalloc_detours.dll test.exe || true
           cat logfile.sym
 
       - name: Test
