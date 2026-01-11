@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DMALLOC_DISABLE
-#include "dmalloc.h"
-#include "error.h"
+#undef DLL_EXPORT
 #include "user_malloc_loc.h"
 
 #define FUNCS                                                                            \
@@ -35,7 +33,6 @@ void resolve_symbols() {
     DWORD err = GetLastError();
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, sizeof(buf), NULL);
-    dmalloc_error(buf);
     return;
   }
   FILE *ifile = fopen(dmalloc_logpath, "r");
@@ -72,6 +69,9 @@ exit:
   SymCleanup(hProcess);
 }
 
+__declspec(dllimport) int auto_shutdown_b;
+__declspec(dllimport) char *dmalloc_logpath;
+
 __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason,
                                           LPVOID reserved) {
   if (DetourIsHelperProcess()) {
@@ -80,6 +80,8 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason,
 
   switch (dwReason) {
   case DLL_PROCESS_ATTACH:
+    auto_shutdown_b = 0;
+
     DetourRestoreAfterWith();
 
     DetourTransactionBegin();
@@ -96,6 +98,11 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason,
     FUNCS
 #undef X
     DetourTransactionCommit();
+
+    dmalloc_shutdown();
+    if (dmalloc_logpath)
+      resolve_symbols();
+
     break;
   }
   return TRUE;

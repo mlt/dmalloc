@@ -109,6 +109,12 @@ static char *information = "@(#) $Information: lock-threads is enabled $";
 
 /* exported variables */
 
+/* When using Detours on Windows, we need some controlled shutdown from within DLLMain */
+#if HAVE_DETOURS
+__declspec(dllexport)
+int		auto_shutdown_b = 1;
+#endif
+
 /* internal dmalloc error number for reference purposes only */
 int		dmalloc_errno = DMALLOC_ERROR_NONE;
 
@@ -121,6 +127,7 @@ static	int		in_alloc_b = 0;		/* can't be here twice */
 static	int		do_shutdown_b = 0;	/* execute shutdown soon */
 static	int		memalign_warn_b = 0;	/* memalign warning printed?*/
 static	dmalloc_track_t	tracking_func = NULL;	/* memory trxn tracking func */
+
 
 /* debug variables */
 static	char		*start_file = NULL;	/* file to start at */
@@ -412,8 +419,11 @@ static	int	dmalloc_startup(const char *debug_str)
 #if AUTO_SHUTDOWN
   /* NOTE: I use the else here in case some dumb systems has both */
 #if HAVE_ATEXIT
+#if HAVE_DETOURS
+  if (auto_shutdown_b)
+#endif /* HAVE_DETOURS */
   (void)atexit(dmalloc_shutdown);
-#else
+#else /* HAVE_ATEXIT */
 #if HAVE_ON_EXIT
   (void)on_exit(dmalloc_shutdown, NULL);
 #endif /* HAVE_ON_EXIT */
@@ -662,12 +672,6 @@ void	dmalloc_shutdown(void)
   unlock_thread();
 #endif
   
-#if HAVE_DETOURS
-  extern void resolve_symbols();
-  if (dmalloc_logpath)
-    resolve_symbols();
-#endif
-
   /* NOTE: do not set enabled_b to false here */
 }
 

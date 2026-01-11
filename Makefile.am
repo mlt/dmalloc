@@ -29,15 +29,14 @@ SOURCES = append.c append.h arg_check.c arg_check.h chunk_loc.h	\
 	error.h heap.c heap.h protect.c protect.h return.h		\
 	user_malloc.c user_malloc.h
 
-if ENABLE_CXX
-SOURCES += dmallocc.cc
-endif
-
 if ENABLE_STATIC
 lib_LTLIBRARIES += libdmalloc_static.la
 libdmalloc_static_la_SOURCES = $(SOURCES)
 libdmalloc_static_la_CPPFLAGS = $(AM_CPPFLAGS) -DDMALLOC_STATIC_LINK
 libdmalloc_static_la_LDFLAGS = -static
+if ENABLE_CXX
+libdmalloc_static_la_SOURCES += dmallocc.cc
+endif
 if MSVC
 libdmalloc_static_la_CPPFLAGS += -Zi -Fddmalloc_static.pdb
 libdmalloc_static_la_LDFLAGS += -Wl,-DEBUG
@@ -69,10 +68,14 @@ libdmalloc_la_CPPFLAGS = -MD -Zi -Fddmalloc.dll.pdb
 #export _LINK_=-DEBUG -PDB:dmalloc.dll.pdb
 libdmalloc_la_LDFLAGS += -Wl,-Xlinker,-DEBUG,-Xlinker,-PDB:dmalloc.dll.pdb
 if HAVE_DETOURS
-libdmalloc_la_SOURCES += dmalloc_detours.c
-libdmalloc_la_CPPFLAGS += -I@VCPKG_ROOT_DIR@/include
-libdmalloc_la_LDFLAGS += -Wl,@VCPKG_ROOT_DIR@/lib/detours.lib
-libdmalloc_la_LIBADD = -lDbghelp
+lib_LTLIBRARIES += libdmalloc_detours.la
+## Detours uses global new/delete operators. This avoids recursion.
+libdmalloc_detours_la_SOURCES = dmalloc_detours.c dmallocc.cc
+libdmalloc_detours_la_CPPFLAGS = -MD -Zi -Fddmalloc_detours.dll.pdb -I@VCPKG_ROOT_DIR@/include
+libdmalloc_detours_la_LDFLAGS = -shared -no-undefined -avoid-version \
+ -Wl,@VCPKG_ROOT_DIR@/lib/detours.lib \
+ -Wl,-Xlinker,-DEBUG,-Xlinker,-PDB:dmalloc_detours.dll.pdb
+libdmalloc_detours_la_LIBADD = libdmalloc.la -lDbghelp
 pkglibexec_PROGRAMS += dmalloc_win32_t
 dmalloc_win32_t_SOURCES = dmalloc_win32_t.c
 dmalloc_win32_t_LDADD = libdmalloc.la
@@ -80,6 +83,11 @@ dmalloc_win32_t_LDADD = libdmalloc.la
 ## Also consider -DYNAMICBASE:NO
 dmalloc_win32_t_CPPFLAGS = -MD -Zi -Fddmalloc_win32_t.pdb
 endif # HAVE_DETOURS
+else # MSVC
+if ENABLE_CXX
+## TODO: There is no point including it on Windows with non-MSVC compiler either
+libdmalloc_la_SOURCES += dmallocc.cc
+endif
 endif # MSVC
 dmalloc_LDADD = libdmalloc.la
 dmalloc_t_LDADD = libdmalloc.la
