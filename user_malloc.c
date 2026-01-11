@@ -78,6 +78,9 @@
 
 #if SIGNAL_OKAY && HAVE_SIGNAL_H
 #include <signal.h>
+#elif defined(_MSC_VER)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #endif
 
 #define DMALLOC_DISABLE
@@ -335,7 +338,28 @@ static	void	signal_handler(const int sig)
     dmalloc_shutdown();
   }
 }
-#endif
+#elif defined(_MSC_VER)
+static LONG WINAPI signal_handler(LPEXCEPTION_POINTERS ExceptionInfo)
+{
+  char where_buf[256];
+  dmalloc_message("caught unhandled exception %p from '%s'",
+    ExceptionInfo->ExceptionRecord->ExceptionCode,
+    _dmalloc_chunk_desc_pnt(where_buf, sizeof(where_buf),
+    ExceptionInfo->ExceptionRecord->ExceptionAddress , DMALLOC_DEFAULT_LINE));
+  /* if we are already inside malloc then do the shutdown later */
+  if (in_alloc_b) {
+    do_shutdown_b = 1;
+  }
+  else {
+#if HAVE_DETOURS
+    if (!auto_shutdown_b)
+      exit(-1);
+#endif /* HAVE_DETOURS */
+    dmalloc_shutdown();
+  }
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif /* SIGNAL_OKAY */
 
 /*
  * startup the memory-allocation module
@@ -451,6 +475,9 @@ static	int	dmalloc_startup(const char *debug_str)
     (void)signal(SIGNAL6, signal_handler);
 #endif
   }
+#elif defined(_MSC_VER)
+  if (BIT_IS_SET(_dmalloc_flags, DMALLOC_DEBUG_CATCH_SIGNALS))
+    AddVectoredExceptionHandler(0, signal_handler);
 #endif /* SIGNAL_OKAY */
   
   return 1;
