@@ -101,6 +101,16 @@ dmalloc_fc_t_LDADD = libdmalloc_static.la
 dmalloc_fc_t_CPPFLAGS = $(AM_CPPFLAGS) -DDMALLOC_STATIC_LINK
 endif # ENABLE_SHARED
 
+if MSVC
+SYMBOLS = dmalloc_detours.dll.pdb dmalloc.dll.pdb dmalloc_static.pdb
+
+install-exec-hook:
+	-$(INSTALL_DATA) $(SYMBOLS) '$(DESTDIR)$(bindir)'
+
+uninstall-hook:
+	cd '$(DESTDIR)$(bindir)' && rm -f $(SYMBOLS)
+endif # MSVC
+
 TESTS = $(check_PROGRAMS)
 
 utils: dmalloc
