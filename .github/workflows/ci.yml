@@ -19,10 +19,12 @@ jobs:
             opts: --enable-threads
           - name: macos-arm
             os: macos-latest
+            opts: --enable-threads
           - name: msys
             os: windows-latest
             msystem: MSYS
             toolchain: msys2-devel
+            opts: --enable-threads
           - name: mingw32
             os: windows-latest
             msystem: MINGW32
@@ -38,6 +40,7 @@ jobs:
             msvc_arch: x86
             cc: cl -nologo
             cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Zi -FS -W4
+            cflags: -std:c11
             opts: ac_cv_prog_cc_g=no --disable-shared
           - name: msvc-x64
             os: windows-latest
@@ -46,12 +49,14 @@ jobs:
             msvc_arch: x64
             cc: cl -nologo
             cppflags: -we4274 -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -Zi -FS -W4
-            opts: ac_cv_prog_cc_g=no
+            cflags: -std:c11
+            opts: ac_cv_prog_cc_g=no --enable-threads
 
     env:
       CC: ${{ matrix.cc || '' }}
       CXX: ${{ matrix.cc || '' }}
       CPPFLAGS: ${{ matrix.cppflags || '' }}
+      CFLAGS: ${{ matrix.cflags || '' }}
       MSYSTEM: ${{ matrix.msystem || '' }}
 
     steps:
@@ -111,6 +116,10 @@ jobs:
       - name: Configure
         run: ./configure -C ${{ matrix.opts || '' }}
 
+      - name: Enable thread locking and logging
+        if: ${{ matrix.name != 'macos-arm' }}
+        run: sed -i 's/^\(#define.*THREAD.*\)0/\11/g;s/^\(#define.*THREAD_INIT_LOCK.*\)2/\10/g' settings.h
+
       - name: Build
         run: make -j 2
 
@@ -120,15 +129,19 @@ jobs:
           cd .libs
           cp -a $VCPKG_ROOT/buildtrees/detours/x64-windows-rel/bin.X64/withdll.exe ./
           cat <<'EOF' > test.c
-          #include <stdlib.h>
+          #define WIN32_LEAN_AND_MEAN
+          #include <windows.h>
           int main() {
+            SetThreadDescription(GetCurrentThread(), L"Main");
+            void *a = malloc(10);
+            a = NULL;
             free(NULL);
             *(int *)NULL = 0;
             return 0;
           }
           EOF
           cl -MD -Zi test.c
-          export DMALLOC_OPTIONS=debug=0x10020000,log=logfile
+          export DMALLOC_OPTIONS=debug=0x10020002,log=logfile
           ./withdll -d:dmalloc_detours.dll test.exe || true
           cat logfile.sym
 
