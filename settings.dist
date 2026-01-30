@@ -419,7 +419,13 @@
  * thread mutex init, lock, and unlock functions in malloc.c should
  * also be prototyped here.
  */
+#if __STDC_VERSION__ >= 201112L
+#if HAVE_THREADS_H
+#define THREAD_INCLUDE			<threads.h>
+#endif
+#else
 #define THREAD_INCLUDE			<pthread.h>
+#endif
 
 /*
  * As we approach the time when we start mutex locking the library, we
@@ -442,12 +448,31 @@
  * ``t'' in the logfile.
  */
 #define LOG_PNT_THREAD_ID		0
+#if _MSC_VER
+#define THREAD_TYPE			HANDLE
+#define THREAD_GET_ID()			GetCurrentThread()
+#else
 #define THREAD_TYPE			pthread_t
 #define THREAD_GET_ID()			pthread_self()
+#endif
 #if HAVE_SNPRINTF
+#if _MSC_VER
+#define THREAD_ID_TO_STRING(buf, buf_size, thread_id)	do { \
+				wchar_t *desc = NULL; \
+				HRESULT hr = GetThreadDescription(thread_id, &desc); \
+				if (SUCCEEDED(hr) && desc && *desc) { \
+				    (void)_snprintf((buf), (buf_size), "%#lx [%ls]", GetThreadId(thread_id), desc); \
+				} else { \
+				    (void)_snprintf((buf), (buf_size), "%#lx", \
+					       GetThreadId(thread_id)); \
+				} \
+				if (SUCCEEDED(hr)) LocalFree(desc); \
+			} while (0)
+#else /* _MSC_VER */
 #define THREAD_ID_TO_STRING(buf, buf_size, thread_id)	\
 				(void)snprintf((buf), (buf_size), "%#lx", \
 					       (long)(thread_id))
+#endif /* _MSC_VER */
 #else
 #define THREAD_ID_TO_STRING(buf, buf_size, thread_id)	\
 				(void)sprintf((buf), "%#lx", (long)(thread_id))

@@ -36,6 +36,13 @@
 # include <stdlib.h>
 #endif
 
+#if HAVE_PTHREAD_H /* necessary with msys */
+# include <pthread.h>
+#endif
+#ifdef _MSC_VER
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+#endif
 
 #if LOG_PNT_TIMEVAL
 #ifdef TIMEVAL_INCLUDE

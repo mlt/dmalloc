@@ -40,9 +40,14 @@
 # include <unistd.h>				/* for _exit */
 #endif
 
+#if HAVE_PTHREAD_H /* necessary with msys */
+# include <pthread.h>
+#endif
 #ifdef _MSC_VER
 # include <io.h>				/* for open, close, write */
 # include <process.h>				/* for getpid */
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>				/* GetCurrentThread via THREAD_GET_ID */
 #endif
 
 /* for KILL_PROCESS define */

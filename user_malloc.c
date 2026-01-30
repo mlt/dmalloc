@@ -74,6 +74,9 @@
 #if HAVE_PTHREADS_H
 #include <pthreads.h>
 #endif
+#if HAVE_THREADS_H
+#include <threads.h>
+#endif
 #endif
 
 #if SIGNAL_OKAY && HAVE_SIGNAL_H
@@ -205,6 +208,8 @@ static	void	lock_thread(void)
   if (thread_lock_c == 0) {
 #if HAVE_PTHREAD_MUTEX_LOCK
     pthread_mutex_lock(&dmalloc_mutex);
+#elif __STDC_VERSION__ >= 201112L
+    mtx_lock(&dmalloc_mutex);
 #endif
   }
 }
@@ -236,12 +241,16 @@ static	void	unlock_thread(void)
        * call to pthread_mute_init.
        */
       pthread_mutex_init(&dmalloc_mutex, THREAD_LOCK_INIT_VAL);
+#elif __STDC_VERSION__ >= 201112L
+      mtx_init(&dmalloc_mutex, mtx_plain);
 #endif
     }
   }
   else if (thread_lock_c == 0) {
 #if HAVE_PTHREAD_MUTEX_UNLOCK
     pthread_mutex_unlock(&dmalloc_mutex);
+#elif __STDC_VERSION__ >= 201112L
+    mtx_unlock(&dmalloc_mutex);
 #endif
   }
 }

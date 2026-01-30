@@ -707,34 +707,40 @@ static void foo (void) { }
 )
 
 ##############################################################################
-MSG_NOTICE([pthread particulars])
+MSG_NOTICE([threading particulars])
 
 XX_OLD_LIBS=$LIBS
 
 AC_SEARCH_LIBS(pthread_mutex_init, pthread pthreads c_r)
-AC_CHECK_HEADER([pthread.h],
-		[AC_DEFINE(HAVE_PTHREAD_H,1) AC_SUBST([HAVE_PTHREAD_H],1)],
-		[AC_DEFINE(HAVE_PTHREAD_H,0) AC_SUBST([HAVE_PTHREAD_H],0)])
-AC_CHECK_HEADER([pthreads.h],
-		[AC_DEFINE(HAVE_PTHREADS_H,1) AC_SUBST([HAVE_PTHREADS_H],1)],
-		[AC_DEFINE(HAVE_PTHREADS_H,0) AC_SUBST([HAVE_PTHREADS_H],0)])
-
+AC_CHECK_HEADERS([pthread.h pthreads.h threads.h])
 AC_CHECK_FUNCS(pthread_mutex_init pthread_mutex_lock pthread_mutex_unlock)
 
-AC_MSG_CHECKING([pthread mutex type])
+AC_CACHE_CHECK([thread mutex type], [ac_cv_mutex_type], [
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
 #if HAVE_PTHREAD_H
 #  include <pthread.h>
 #endif
 #if HAVE_PTHREADS_H
 #  include <pthreads.h>
 #endif
+#if HAVE_THREADS_H
+#  include <threads.h>
+#endif
 ]],[[
+#if HAVE_PTHREAD_H || HAVE_PTHREADS_H
    pthread_mutex_t dmalloc_mutex;
-]])],
-[AC_DEFINE(THREAD_MUTEX_T,pthread_mutex_t) AC_MSG_RESULT([pthread_mutex_t])],
-[AC_MSG_RESULT([unknown])]
-)
+   fprintf(stderr, "pthread_mutex_t\n");
+#else
+   mtx_t dmalloc_mutex;
+   fprintf(stderr, "mtx_t\n");
+#endif
+]])], [ ac_cv_mutex_type=$(./conftest$EXEEXT 2>&1) ], [ ac_cv_mutex_type="unknown" ])
+])
+
+if test "$ac_cv_mutex_type" != "unknown"; then
+    AC_DEFINE_UNQUOTED([THREAD_MUTEX_T], [$ac_cv_mutex_type], [Type used for mutex])
+fi
 
 AC_MSG_CHECKING([pthread attribute initialization])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
