@@ -43,6 +43,11 @@
 #include "compat.h"
 #include "dmalloc_loc.h"
 
+#if defined(__CYGWIN__) && HAVE_GETENVIRONMENTVARIABLEA
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+#endif
+
 #if HAVE_ATOI == 0
 /*
  * Turn a ascii-string into an integer which is returned
