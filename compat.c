@@ -478,7 +478,12 @@ char	*loc_getenv(const char *var, char *buf, const int buf_size,
 {
 #if defined(__CYGWIN__) && HAVE_GETENVIRONMENTVARIABLEA
   /* use this function instead of getenv */
-  GetEnvironmentVariableA(var, buf, buf_size);
+  const DWORD ret = GetEnvironmentVariableA(var, buf, buf_size);
+  if (ret == 0) {
+    if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+      return NULL;
+    buf[0] = '\0';
+  }
   return buf;
 #else /* ! __CYGWIN__ */
 #if GETENV_SAFE == 0
